@@ -1,0 +1,16 @@
+spring:
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+      write-date-keys-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  security:
+    user:
+      name: qiaotong
+      password: 123456
+
+
+logging:
+  level:
+    web: debug

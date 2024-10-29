@@ -28,19 +28,22 @@ const onNextClick = () => {
 </template>
 
 <style scoped>
-  .slider {
-    list-style: none;
-    li {
-      &:not(:first-child) {
-        display: none;
-      }
-      & {
-        transition: all 1s ease-in-out;
-      }
-      img {
-        width: 500px;
-        height: 300px;
-      }
+.slider {
+  list-style: none;
+
+  li {
+    &:not(:first-child) {
+      display: none;
+    }
+
+    & {
+      transition: all 1s ease-in-out;
+    }
+
+    img {
+      width: 500px;
+      height: 300px;
     }
   }
+}
 </style>
