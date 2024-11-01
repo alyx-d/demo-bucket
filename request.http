@@ -1,0 +1,20 @@
+@host = http://localhost:8080
+
+### login
+POST {{host}}/passport/login
+Content-Type: application/x-www-form-urlencoded
+
+username = qt &
+password = 123456
+
+
+### upload
+POST {{host}}/index/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data;name="files";filename="request.http"
+Content-Type: multipart/form-data
+
+< c:\dev\java\demo\request.http
+--WebAppBoundary--

@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Optional, Self
 
 
 class ListNode:
-    def __init__(self, val=0, next=None):
+    def __init__(self, val=0, next: Optional[Self] = None):
         self.val = val
         self.next = next
 

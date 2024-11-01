@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10" // validator
 	"github.com/gorilla/mux"
 )
 
@@ -101,7 +101,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if err := utils.Validate.Struct(payload); err != nil {
 		utils.WriteError(w, http.StatusOK, types.HttpResponce{
 			Code:    -1,
-			Message: err.Error(),
+			Message: err.(validator.ValidationErrors).Error(),
 			Data:    nil,
 		})
 		return
@@ -122,7 +122,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusOK, types.HttpResponce{
 			Code:    -1,
-			Message: err.(validator.ValidationErrors).Error(),
+			Message: err.Error(),
 			Data:    nil,
 		})
 		return

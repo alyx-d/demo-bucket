@@ -12,7 +12,7 @@ class Solution:
         head.next = None
         return newHead
 
-    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+    def reverseList2(self, head: Optional[ListNode]) -> Optional[ListNode]:
         if not head:
             return head
         prev = None

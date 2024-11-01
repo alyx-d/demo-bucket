@@ -6,8 +6,8 @@ from leetcode.struct import ListNode
 class Solution:
     def mergeNodes(self, head: Optional[ListNode]) -> Optional[ListNode]:
         val = 0
-        curr = head.next
         vHead = ListNode()
+        curr = head.next
         vCurr = vHead
         while curr:
             val += curr.val
