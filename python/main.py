@@ -4,6 +4,7 @@ import orjson
 
 import hello
 import util
+from leetcode.q25 import test
 
 
 def main():
@@ -14,15 +15,9 @@ def main():
 
 
 def json_test():
-    json_str = [
-        {
-            "id": i,
-            "value": str(i) + "hello"
-        }
-        for i in range(100_0000)
-    ]
+    json_str = [{"id": i, "value": str(i) + "hello"} for i in range(100_0000)]
     s = orjson.dumps(json_str)
 
 
 if __name__ == "__main__":
-    main()
+    test()
