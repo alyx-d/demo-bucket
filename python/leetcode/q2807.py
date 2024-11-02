@@ -1,6 +1,6 @@
 from typing import Optional
 
-from struct import ListNode
+from leetcode_struct import ListNode
 
 
 class Solution:

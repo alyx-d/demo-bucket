@@ -1,7 +1,7 @@
 from itertools import pairwise
 from math import inf
 from typing import List, Optional
-from leetcode.struct import ListNode
+from leetcode.leetcode_struct import ListNode
 
 
 class Soltuion:

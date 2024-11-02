@@ -1,4 +1,4 @@
-from leetcode.struct import ListNode
+from leetcode.leetcode_struct import ListNode
 
 
 class Solution:

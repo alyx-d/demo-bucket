@@ -1,7 +1,7 @@
 from math import inf
 from typing import Optional
 
-from leetcode.struct import ListNode
+from leetcode.leetcode_struct import ListNode
 
 
 class Solution:

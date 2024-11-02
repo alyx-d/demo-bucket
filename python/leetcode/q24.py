@@ -1,6 +1,6 @@
 from typing import Optional
 
-from leetcode.struct import ListNode
+from leetcode.leetcode_struct import ListNode
 
 
 class Solution:
@@ -29,3 +29,7 @@ class Solution:
         head.next = self.swapPairs(newHead.next)
         newHead.next = head
         return newHead
+
+
+if __name__ == "__main__":
+    print("hello")
