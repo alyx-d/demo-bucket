@@ -1,0 +1,28 @@
+<script setup lang="ts">
+import SideMenu from './SideMenu.vue'
+import Header from './Header.vue'
+import Content from './Content.vue'
+</script>
+
+<template>
+    <div class="defaulte-layout">
+        <SideMenu />
+        <div class="content">
+            <Header />
+            <Content />
+        </div>
+    </div>
+</template>
+
+<style lang="css" scoped>
+.defaulte-layout {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+
+    .content {
+        width: 100%;
+    }
+}
+</style>
