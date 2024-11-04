@@ -8,6 +8,9 @@ const active = ref("/recommend");
 watch(() => route.path, value => {
     active.value = value;
 });
+const isActive = (path: string): string => {
+    return active.value === path ? "active" : "";
+};
 
 </script>
 
@@ -16,9 +19,9 @@ watch(() => route.path, value => {
         <AppName />
         <div class="wrpper">
             <div class="first-nav">
-                <router-link :class="active === '/recommend' ? 'active' : ''" to="/recommend">云音乐精选</router-link>
-                <router-link :class="active === '/podcast' ? 'active' : ''" to="/podcast">博客</router-link>
-                <router-link :class="active === '/community' ? 'active' : ''" to="/community">社区</router-link>
+                <router-link :class="isActive('/recommend')" to="/recommend">云音乐精选</router-link>
+                <router-link :class="isActive('/podcast')" to="/podcast">博客</router-link>
+                <router-link :class="isActive('/community')" to="/community">社区</router-link>
             </div>
         </div>
         <div class="devide-line">

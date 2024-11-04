@@ -1,3 +1,5 @@
 [workspace]
 
-members = ["app/src-tauri"]
+resolver = "2"
+
+members = ["app/src-tauri", "audio-test"]

@@ -1,3 +1,5 @@
+use crate::player;
+
 #[tauri::command]
 pub fn button1() -> String {
     "Hello, button1!".to_string()
@@ -5,5 +7,6 @@ pub fn button1() -> String {
 
 #[tauri::command]
 pub fn button2() -> String {
-    "Hello, button2!".to_string()
+    player::music_player::play();
+    return "start play".to_string();
 }
