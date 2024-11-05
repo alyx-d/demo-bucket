@@ -1,7 +1,12 @@
-use rodio::Sink;
-use std::sync::{
-    mpsc::{Receiver, Sender},
-    Arc, Mutex,
+use rodio::{Decoder, Sink, Source};
+use std::{
+    fs::File,
+    path::Path,
+    sync::{
+        mpsc::{Receiver, Sender},
+        Arc, Mutex,
+    },
+    time::Duration,
 };
 pub struct Player {
     current_sink: Arc<Sink>,
@@ -13,8 +18,16 @@ pub struct Player {
 }
 
 struct Controller {
-    play_list: Vec<String>,
+    play_list: Vec<FileInfo>,
     current_index: usize,
+}
+
+/// mp3 file info
+#[derive(Clone)]
+struct FileInfo {
+    /// path
+    path: String,
+    total_duration: Duration,
 }
 impl Player {
     /**
@@ -41,11 +54,12 @@ impl Player {
         }
     }
     pub fn add_source(&self, path: &str) {
-        self.controller
-            .lock()
-            .unwrap()
-            .play_list
-            .push(path.to_string());
+        let file = File::open(path).unwrap();
+        let source = Decoder::new(file).unwrap();
+        self.controller.lock().unwrap().play_list.push(FileInfo {
+            path: path.to_string(),
+            total_duration: source.total_duration().take().unwrap(),
+        });
     }
 
     pub fn len(&self) -> usize {
@@ -62,25 +76,29 @@ impl Player {
         }
         let controller = self.controller.clone();
         let sink = self.current_sink.clone();
+        sink.set_volume(1.0);
         let sender = self.singal_sender.clone();
         std::thread::spawn(move || loop {
             {
                 let mut controller = controller.lock().unwrap();
                 let play_list = controller.play_list.clone();
                 let mut index = controller.current_index;
-                let file = std::fs::File::open(play_list[index].as_str()).unwrap();
-                let source = rodio::Decoder::new(std::io::BufReader::new(file)).unwrap();
-                sink.append(source);
-                sink.play();
-                sender.send(1).unwrap();
-                println!(
-                    "Playing: {}",
-                    std::path::Path::new(&play_list[index])
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                );
+                let file = File::open(play_list[index].path.as_str());
+                let file_name = Path::new(&play_list[index].path)
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap();
+                if let Ok(file) = file {
+                    let source = rodio::Decoder::new(std::io::BufReader::new(file)).unwrap();
+                    sink.append(source);
+                    sink.play();
+                    sender.send(1).unwrap();
+                    println!("Playing: {}", file_name);
+                } else {
+                    controller.play_list.remove(index);
+                    println!("file not exists {}", file_name);
+                }
                 index += 1;
                 controller.current_index = index % play_list.len();
             }
@@ -126,15 +144,16 @@ impl Player {
 
     pub fn list(&self) {
         let controller = self.controller.lock().unwrap();
-        for (i, path) in controller.play_list.iter().enumerate() {
+        for (i, info) in controller.play_list.iter().enumerate() {
             println!(
-                "{}. {}",
+                "{}. {} {}",
                 i + 1,
-                std::path::Path::new(path)
+                Path::new(info.path.as_str())
                     .file_name()
                     .unwrap()
                     .to_str()
-                    .unwrap()
+                    .unwrap(),
+                secs_to_string(info.total_duration.as_secs())
             );
         }
     }
@@ -142,12 +161,10 @@ impl Player {
     pub fn prev(&self) {
         {
             let mut controller = self.controller.lock().unwrap();
-            controller.current_index = if controller.current_index == 0 {
-                controller.play_list.len() - 2
-            } else if controller.current_index == 1 {
-                controller.play_list.len() - 1
-            } else {
-                controller.current_index - 2
+            controller.current_index = match controller.current_index {
+                0 => controller.play_list.len() - 2,
+                1 => controller.play_list.len() - 1,
+                _ => controller.current_index - 2,
             };
         }
         self.stop();
@@ -170,6 +187,16 @@ impl Player {
             self.current_sink.sleep_until_end();
         }
     }
+}
+
+fn secs_to_string(secs: u64) -> String {
+    let min = secs / 60;
+    let sec = secs % 60;
+    let result = match min {
+        _ if min > 0 => format!("{:02}:{:02}", min, sec),
+        _ => format!("{:02}", sec),
+    };
+    return result;
 }
 
 #[cfg(test)]
