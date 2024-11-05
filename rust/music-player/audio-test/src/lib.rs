@@ -19,7 +19,6 @@ struct Controller {
 impl Player {
     /**
      * create player instance <br/>
-     * @return instance
      * ```
      * use audio_test::Player;
      * let player = Player::new();
@@ -58,6 +57,7 @@ impl Player {
     }
     pub fn play(&self) {
         if self.empty() {
+            eprintln!("nothing to play");
             return;
         }
         let controller = self.controller.clone();
@@ -102,7 +102,8 @@ impl Player {
     }
 
     pub fn clear(&self) {
-        self.current_sink.clear();
+        let mut controller = self.controller.lock().unwrap();
+        controller.play_list.clear();
     }
 
     pub fn set_on_per_seconds(&mut self, func: fn(u64)) {
@@ -111,6 +112,31 @@ impl Player {
 
     pub fn next(&mut self) {
         self.stop();
+    }
+
+    pub fn play_index(&self, index: usize) {
+        let mut controller = self.controller.lock().unwrap();
+        if index > controller.play_list.len() {
+            println!("index out of range");
+            return;
+        }
+        controller.current_index = index - 1;
+        self.stop();
+    }
+
+    pub fn list(&self) {
+        let controller = self.controller.lock().unwrap();
+        for (i, path) in controller.play_list.iter().enumerate() {
+            println!(
+                "{}. {}",
+                i + 1,
+                std::path::Path::new(path)
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+            );
+        }
     }
 
     pub fn prev(&self) {
