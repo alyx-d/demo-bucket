@@ -7,7 +7,7 @@ fn home_dir() -> String {
 }
 
 #[allow(dead_code)]
-fn read_audioes(player: &mut Player) {
+fn read_audios(player: &mut Player) {
     player.clear();
     let dirs = vec![home_dir() + "\\Music\\mp3", "c:\\CloudMusic".to_string()];
     fn add_source(player: &mut Player, dir: &str) {
@@ -27,7 +27,7 @@ fn read_audioes(player: &mut Player) {
 #[allow(dead_code)]
 fn play_test() {
     let mut player = Player::new();
-    read_audioes(&mut player);
+    read_audios(&mut player);
     player.set_on_per_seconds(|_delta| {
         println!("delta: {}", _delta);
     });
@@ -44,7 +44,7 @@ fn play_test() {
             "prev" => player.prev(),
             "next" => player.next(),
             "scan" => {
-                read_audioes(&mut player);
+                read_audios(&mut player);
                 player.list();
             }
             "list" => player.list(),

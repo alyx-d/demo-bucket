@@ -6,76 +6,97 @@ import { ref, watch } from 'vue';
 const route = useRoute();
 const active = ref("/recommend");
 watch(() => route.path, value => {
-    active.value = value;
+  active.value = value;
 });
 const isActive = (path: string): string => {
-    return active.value === path ? "active" : "";
+  return active.value === path ? "active" : "";
 };
 
 </script>
 
 <template>
-    <div class="side-menu">
-        <AppName />
-        <div class="wrpper">
-            <div class="first-nav">
-                <router-link :class="isActive('/recommend')" to="/recommend">云音乐精选</router-link>
-                <router-link :class="isActive('/podcast')" to="/podcast">博客</router-link>
-                <router-link :class="isActive('/community')" to="/community">社区</router-link>
-            </div>
-        </div>
-        <div class="devide-line">
-            <hr />
-        </div>
+  <div class="side-menu">
+    <AppName />
+    <div class="wrapper">
+      <div class="nav">
+        <router-link draggable="false" :class="isActive('/recommend')" to="/recommend">云音乐精选</router-link>
+        <router-link draggable="false" :class="isActive('/podcast')" to="/podcast">博客</router-link>
+        <router-link draggable="false" :class="isActive('/community')" to="/community">社区</router-link>
+      </div>
     </div>
+    <div class="device-line">
+      <hr />
+    </div>
+    <div class="wrapper">
+      <div class="tip">
+        <span class="text">我的</span>
+      </div>
+      <div class="nav">
+        <router-link draggable="false" :class="isActive('/local-music')" to="/local-music">本地音乐</router-link>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style lang="css" scoped>
 .side-menu {
-    width: 250px;
-    height: 100%;
+  width: 200px;
+  min-width: 200px;
+  height: 100vh;
+  min-height: 100vh;
+  background-color: #f0f3f6;
 
-    .wrpper {
-        width: 100%;
-        padding: 0 30px;
+  .wrapper {
+    width: 100%;
+    padding: 0 30px;
+
+    .tip {
+      padding: 0 10px 20px 10px;
+
+      .text {
+        font-size: 12px;
+        color: #999;
+      }
     }
+  }
 
-    .first-nav {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+  .nav {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
-        a {
-            text-align: start;
-            width: 100%;
-            padding: 7px 10px;
-            border-radius: 8px;
-            font-size: 14px;
 
-            &:not(:last-child) {
-                margin-bottom: 5px;
-            }
+    a {
+      text-align: start;
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 15px;
 
-            &:hover {
-                background-color: #eee;
-            }
+      &:not(:last-child) {
+        margin-bottom: 5px;
+      }
 
-            &.active {
-                color: white;
-                background-color: #ff0011;
-            }
-        }
+      &:hover {
+        background-color: #eee;
+      }
+
+      &.active {
+        color: white;
+        background: linear-gradient(to right, #f6142e, #f85354);
+      }
     }
+  }
 
-    .devide-line {
-        padding: 20px 30px;
+  .device-line {
+    padding: 20px 30px;
 
-        hr {
-            height: 1px;
-            background-color: #eee;
-            border: none;
-        }
+    hr {
+      height: 1px;
+      background-color: #eee;
+      border: none;
     }
+  }
 }
 </style>

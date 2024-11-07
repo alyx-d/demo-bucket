@@ -10,7 +10,6 @@ import DefaultLayout from './layout/DefaultLayout.vue'
 
 <style lang="css" scoped>
 main {
-  overflow: hidden;
   min-width: 800px;
   min-height: 600px;
 }

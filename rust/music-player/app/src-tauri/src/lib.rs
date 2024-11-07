@@ -1,4 +1,7 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+#![allow(dead_code)]
+
+use std::sync::Mutex;
+
 mod commands;
 mod player;
 
@@ -10,11 +13,26 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .manage(Mutex::new(player::init_player()))
         .invoke_handler(tauri::generate_handler![
             greet,
             commands::button1,
-            commands::button2
+            commands::button2,
+            commands::get_default_dirs,
+            commands::player_scan_dirs,
+            commands::player_play,
+            commands::player_play_index,
+            commands::player_pause,
+            commands::player_resume,
+            commands::player_next,
+            commands::player_prev,
+            commands::player_set_volume,
+            commands::player_set_speed,
+            commands::player_list,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

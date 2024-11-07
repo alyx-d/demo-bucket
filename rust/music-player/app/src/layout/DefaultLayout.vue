@@ -5,24 +5,24 @@ import Content from './Content.vue'
 </script>
 
 <template>
-    <div class="defaulte-layout">
-        <SideMenu />
-        <div class="content">
-            <Header />
-            <Content />
-        </div>
+  <div class="default-layout">
+    <SideMenu/>
+    <div class="content">
+      <Header/>
+      <Content/>
     </div>
+  </div>
 </template>
 
 <style lang="css" scoped>
-.defaulte-layout {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: space-between;
+.default-layout {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: space-between;
 
-    .content {
-        width: 100%;
-    }
+  .content {
+    flex-grow: 1;
+  }
 }
 </style>

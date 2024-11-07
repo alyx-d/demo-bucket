@@ -17,7 +17,10 @@ const routes: Readonly<RouteRecordRaw[]> = [
         path: "/community",
         component: () => import("../pages/Community.vue"),
     },
-
+    {
+        path: "/local-music",
+        component: () => import("../pages/LocalMusic.vue"),
+    },
 ]
 
 export const router = createRouter({

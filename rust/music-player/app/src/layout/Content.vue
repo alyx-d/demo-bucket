@@ -3,23 +3,31 @@
 </script>
 
 <template>
+  <div class="content">
     <router-view v-slot="{ Component }">
-        <transition name="fade">
-            <keep-alive>
-                <component :is="Component" />
-            </keep-alive>
-        </transition>
+      <transition name="fade">
+        <component :is="Component" />
+      </transition>
     </router-view>
+  </div>
 </template>
 
 <style lang="css" scoped>
+.content {
+  padding: 50px 30px 30px 30px;
+  height: 100%;
+  background-color: #f7f9fc;
+  overflow-y: auto;
+  min-width: 768px;
+}
+
 .fade-enter-active {
-    transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-    opacity: 0;
-    transform: translateX(10px);
+  opacity: 0;
+  transform: translateX(10px);
 }
 </style>

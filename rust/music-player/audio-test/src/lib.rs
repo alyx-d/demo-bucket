@@ -27,6 +27,7 @@ struct Controller {
 struct FileInfo {
     /// path
     path: String,
+    /// total duration
     total_duration: Duration,
 }
 impl Player {
@@ -40,13 +41,13 @@ impl Player {
     pub fn new() -> Self {
         let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
         let sink = rodio::Sink::try_new(&handle).unwrap();
-        let (singal_sender, singal_receiver) = std::sync::mpsc::channel();
+        let (signal_sender, signal_receiver) = std::sync::mpsc::channel();
         Self {
             current_sink: Arc::new(sink),
             _stream, // 保存stream 确保它的生命周期与播放器对象相同，以保持音频输出设备的连接。
             on_per_seconds: None,
-            singal_sender,
-            singal_receiver,
+            singal_sender: signal_sender,
+            singal_receiver: signal_receiver,
             controller: Arc::new(Mutex::new(Controller {
                 play_list: Vec::new(),
                 current_index: 0,

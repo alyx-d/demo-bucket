@@ -1,5 +1,7 @@
 :root {
     --text-color: #aaa;
+    --main-color: #f6142eda;
+    --main-color-dark: #f6143e;
 }
 
 * {
@@ -15,6 +17,9 @@ a {
 
     &:hover {
         color: inherit;
+    }
+    &:-moz-drag-over {
+        cursor: inherit;
     }
 }
 

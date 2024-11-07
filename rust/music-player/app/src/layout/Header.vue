@@ -3,6 +3,6 @@
 
 <template>
     <div class="header">
-        <span>Header</span>
+        <span></span>
     </div>
 </template>
