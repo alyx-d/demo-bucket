@@ -6,6 +6,8 @@ import { invoke } from "@tauri-apps/api/core";
 import StorageKey from "../common/StorageKey.ts";
 import Commands from "../common/Commands.ts";
 import { last } from "../common/Utils.ts";
+import { listen } from "@tauri-apps/api/event";
+import PlayerEvents from "../common/PlayerEvents.ts";
 
 export interface FileInfo {
   path: string;
@@ -70,11 +72,10 @@ const readPlayList = async () => {
   } else {
     list = JSON.parse(localList) as FileInfo[];
   }
-  console.log("list:", list);
   totalMusic.value = list.length;
   if (list.length > 0) {
     playList.value = list.map(it => {
-      it.path = last(it.path.split("\\"));
+      it.path = last(it.path.split("\\")).replace(".mp3", "");
       return it;
     });
   }
@@ -85,15 +86,30 @@ onBeforeMount(async () => {
   await readPlayList();
 });
 
-const play = (index: number) => {
+const play = async (index: number) => {
   playerCtl.value.isPlaying = true;
   playerCtl.value.currentIndex = index - 1;
-  invoke(Commands.player_play_index, { index });
+  await invoke(Commands.player_set_volume, { volume: 1.0 });
+  await invoke(Commands.player_play_index, { index });
+};
+
+const pause = async () => {
+  playerCtl.value.isPlaying = false;
+  await invoke(Commands.player_pause);
+};
+
+const isPlaying = (index: number) => {
+  return playerCtl.value.isPlaying && playerCtl.value.currentIndex == index;
 };
 
 const isPlayingClass = (index: number) => {
-  return playerCtl.value.isPlaying && playerCtl.value.currentIndex == index ? "playing" : "";
+  return isPlaying(index) ? "playing" : "";
 };
+
+listen(PlayerEvents.Play, (event) => {
+  console.log("PlayerEvents.Play", event);
+  playerCtl.value.currentIndex = event.payload as number;
+});
 </script>
 
 <template>
@@ -121,8 +137,10 @@ const isPlayingClass = (index: number) => {
       </div>
       <div class="item" v-for="(item, index) in playList" :key="index">
         <div class="seq">
-          <span class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
-          <img class="play" src="/icons/play_fill.svg" alt="play" @click="play(index + 1)" />
+          <span v-show="!isPlaying(index)" class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
+          <img v-show="isPlaying(index)" class="text" src="/icons/playing.svg" alt="playing" />
+          <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play" @click="play(index + 1)" />
+          <img v-show="isPlaying(index)" class="play" src="/icons/pause.svg" alt="play" @click="pause" />
         </div>
         <div :class="`title ${isPlayingClass(index)}`">{{ item.path }}</div>
         <div class="album">{{ item.album }}</div>

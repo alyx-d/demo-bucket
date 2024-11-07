@@ -1,6 +1,8 @@
+pub mod events;
 pub mod music_player;
 
 pub use music_player::Player;
+use tauri::AppHandle;
 
 pub fn default_dirs() -> Vec<String> {
     let home_dir = std::env::var("USERPROFILE").unwrap();
@@ -10,8 +12,8 @@ pub fn default_dirs() -> Vec<String> {
     ]
 }
 
-pub fn init_player() -> Player {
-    Player::new()
+pub fn init_player(app: AppHandle) -> Player {
+    Player::new(app)
 }
 
 pub fn secs_to_string(secs: u64) -> String {

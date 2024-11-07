@@ -2,6 +2,8 @@
 
 use std::sync::Mutex;
 
+use tauri::Manager;
+
 mod commands;
 mod player;
 
@@ -17,7 +19,10 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        .manage(Mutex::new(player::init_player()))
+        .setup(|app| {
+            app.manage(Mutex::new(player::init_player(app.handle().clone())));
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             commands::button1,

@@ -26,7 +26,9 @@ pub fn player_scan_dirs(player: State<Mutex<Player>>, dirs: Vec<String>) -> usiz
     for dir in dirs {
         player.scan_dir(dir.as_str());
     }
-    player.play();
+    if !player.is_running() {
+        player.play();
+    }
     player.len() - len
 }
 
@@ -69,8 +71,8 @@ pub fn player_set_speed(player: State<Mutex<Player>>, speed: f32) {
 pub fn player_list(player: State<Mutex<Player>>) -> FileInfoVec {
     let result = FileInfoVec(player.lock().unwrap().list());
     let clone = result.clone();
-    if let tauri::ipc::InvokeResponseBody::Json(json) = clone.body().unwrap() {
-        println!("json: {:?}", json);
+    if let tauri::ipc::InvokeResponseBody::Json(_json) = clone.body().unwrap() {
+        // println!("json: {:?}", _json);
     }
     result
 }

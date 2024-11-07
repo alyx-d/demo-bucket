@@ -1,25 +1,27 @@
 use id3::{Tag, TagLike};
 use rodio::{Decoder, OutputStream, Sink, Source};
-use serde::Serialize;
 use std::fs::{read_dir, File};
 use std::io::BufReader;
 use std::path::Path;
-use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use tauri::ipc::{InvokeResponseBody, IpcResponse};
+use tauri::{AppHandle, Emitter};
+
+use crate::player::events::PlayerEvents;
 
 use super::{byte_to_mb, secs_to_string};
 
 pub struct Player {
+    app: AppHandle,
     sink: Arc<Sink>,
     _output_stream: OutputStream,
     controller: Arc<Mutex<Controller>>,
-    is_running: Arc<AtomicBool>,
 }
 
 struct Controller {
     play_list: Vec<FileInfo>,
     current_index: usize,
+    is_running: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -59,12 +61,9 @@ impl IpcResponse for FileInfoVec {
             "[{}]",
             self.0
                 .iter()
-                .map(|info| {
-                    if let InvokeResponseBody::Json(json) = info.clone().body().unwrap() {
-                        json
-                    } else {
-                        "null".to_string()
-                    }
+                .map(|info| match info.clone().body() {
+                    Ok(InvokeResponseBody::Json(json)) => json,
+                    _ => "null".to_string(),
                 })
                 .collect::<Vec<String>>()
                 .join(",")
@@ -75,17 +74,19 @@ impl IpcResponse for FileInfoVec {
 unsafe impl Send for Player {}
 
 impl Player {
-    pub fn new() -> Self {
+    pub fn new(app: AppHandle) -> Self {
         let (_output_stream, stream_handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&stream_handle).unwrap();
+        sink.set_volume(0.0);
         Self {
+            app,
             sink: Arc::new(sink),
             _output_stream,
             controller: Arc::new(Mutex::new(Controller {
                 play_list: vec![],
                 current_index: 0,
+                is_running: false,
             })),
-            is_running: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -134,12 +135,18 @@ impl Player {
         }
     }
 
+    pub fn is_running(&self) -> bool {
+        self.controller.lock().unwrap().is_running
+    }
+
     pub fn play(&self) {
         let sink = self.sink.clone();
         let controller = self.controller.clone();
+        let app_handle = self.app.clone();
         std::thread::spawn(move || loop {
             {
                 let mut controller = controller.lock().unwrap();
+                controller.is_running = true;
                 let mut index = controller.current_index;
                 let file = File::open(controller.play_list[index].path.as_str());
                 let file_name = Path::new(&controller.play_list[index].path)
@@ -155,6 +162,7 @@ impl Player {
                 } else {
                     println!("file not exists {}", file_name);
                 }
+                app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
                 index += 1;
                 controller.current_index = index % controller.play_list.len();
             }
@@ -166,7 +174,6 @@ impl Player {
         let mut controller = self.controller.lock().unwrap();
         controller.current_index = index - 1;
         self.stop();
-        println!("play_index: {}", controller.current_index);
     }
 
     pub fn stop(&self) {
@@ -216,7 +223,7 @@ impl Player {
     pub fn list(&self) -> Vec<FileInfo> {
         let controller = self.controller.lock().unwrap();
         let result = controller.play_list.iter().cloned().collect();
-        println!("list: {:?}", result);
+        // println!("list: {:?}", result);
         result
     }
 }
