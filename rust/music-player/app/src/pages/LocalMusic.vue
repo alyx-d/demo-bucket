@@ -22,6 +22,7 @@ export interface FileInfo {
 interface PlayerCtl {
   currentIndex: number;
   isPlaying: boolean;
+  isPause: boolean;
 }
 
 const totalMusic = ref(0);
@@ -30,7 +31,11 @@ const scanShow = ref(false);
 
 const playList = ref<FileInfo[]>([]);
 
-const playerCtl = ref<PlayerCtl>({ currentIndex: 0, isPlaying: false });
+const playerCtl = ref<PlayerCtl>({
+  currentIndex: 0,
+  isPlaying: false,
+  isPause: false,
+});
 
 const dialog = ref<ExposeMethods | null>(null);
 const openDialog = () => {
@@ -81,20 +86,23 @@ const readPlayList = async () => {
   }
 };
 onBeforeMount(async () => {
-  localStorage.clear();
   await scanDefaultDirs();
   await readPlayList();
 });
 
 const play = async (index: number) => {
   playerCtl.value.isPlaying = true;
-  playerCtl.value.currentIndex = index - 1;
-  await invoke(Commands.player_set_volume, { volume: 1.0 });
-  await invoke(Commands.player_play_index, { index });
+  if (playerCtl.value.isPause && index == playerCtl.value.currentIndex) {
+    await invoke(Commands.player_resume);
+  } else {
+    playerCtl.value.currentIndex = index;
+    await invoke(Commands.player_play_index, { index });
+  }
 };
 
 const pause = async () => {
   playerCtl.value.isPlaying = false;
+  playerCtl.value.isPause = true;
   await invoke(Commands.player_pause);
 };
 
@@ -103,7 +111,7 @@ const isPlaying = (index: number) => {
 };
 
 const isPlayingClass = (index: number) => {
-  return isPlaying(index) ? "playing" : "";
+  return (playerCtl.value.isPlaying || playerCtl.value.isPause) && playerCtl.value.currentIndex == index ? "playing" : "";
 };
 
 listen(PlayerEvents.Play, (event) => {
@@ -139,7 +147,7 @@ listen(PlayerEvents.Play, (event) => {
         <div class="seq">
           <span v-show="!isPlaying(index)" class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
           <img v-show="isPlaying(index)" class="text" src="/icons/playing.svg" alt="playing" />
-          <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play" @click="play(index + 1)" />
+          <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play" @click="play(index)" />
           <img v-show="isPlaying(index)" class="play" src="/icons/pause.svg" alt="play" @click="pause" />
         </div>
         <div :class="`title ${isPlayingClass(index)}`">{{ item.path }}</div>

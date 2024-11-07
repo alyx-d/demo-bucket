@@ -77,7 +77,6 @@ impl Player {
     pub fn new(app: AppHandle) -> Self {
         let (_output_stream, stream_handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&stream_handle).unwrap();
-        sink.set_volume(0.0);
         Self {
             app,
             sink: Arc::new(sink),
@@ -172,7 +171,7 @@ impl Player {
 
     pub fn play_index(&self, index: usize) {
         let mut controller = self.controller.lock().unwrap();
-        controller.current_index = index - 1;
+        controller.current_index = index;
         self.stop();
     }
 
