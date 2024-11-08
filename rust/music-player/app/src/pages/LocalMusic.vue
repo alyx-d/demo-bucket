@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue";
+import { onActivated, ref, watch } from "vue";
 import Dialog, { ExposeMethods } from "../components/Dialog.vue";
 import SelectLocalDir from "../components/SelectLocalDir.vue";
 import { invoke } from "@tauri-apps/api/core";
-import StorageKey from "../common/StorageKey.ts";
 import Commands from "../common/Commands.ts";
-import { last, storeGet, storeSet } from "../common/Utils.ts";
 import { listen } from "@tauri-apps/api/event";
 import PlayerEvents from "../common/PlayerEvents.ts";
 import { usePlayBottomStore } from "../store/PlayBottomStore.ts";
+import { doScanDirs, readPlayList, usePlayerStateStore } from "../store/PlayerStateStore.ts";
+import { storeGet } from "../common/Utils.ts";
+import StorageKey from "../common/StorageKey.ts";
 
 export interface FileInfo {
   path: string;
@@ -20,25 +21,33 @@ export interface FileInfo {
   album: string;
 }
 
+export interface OwnFileInfo extends FileInfo {
+  originIndex: number;
+};
+
 interface PlayerCtl {
   currentIndex: number;
   isPlaying: boolean;
   isPause: boolean;
 }
 
-const totalMusic = ref(0);
 const scanTotal = ref(0);
 const scanShow = ref(false);
 const selectedItemIdx = ref(-1);
 
 const store = usePlayBottomStore();
+const playerStore = usePlayerStateStore();
 
-const playList = ref<FileInfo[]>([]);
+const playList = ref<OwnFileInfo[]>(storeGet<OwnFileInfo[]>(StorageKey.play_list) ?? []);
 
 const playerCtl = ref<PlayerCtl>({
   currentIndex: 0,
   isPlaying: false,
   isPause: false,
+});
+watch(playerCtl, val => {
+  playerStore.setPlayingIndex(playList.value[val.currentIndex].originIndex);
+  playerStore.setPlaying(val.isPlaying);
 });
 
 
@@ -57,44 +66,26 @@ const unDisplayScan = (num: number) => {
   }, 1500);
 };
 
-const scanDefaultDirs = async () => {
-  let dirs = storeGet<string[]>(StorageKey.scan_dirs);
-  if (!dirs) {
-    const default_dirs = await invoke<string>(Commands.get_default_dirs);
-    dirs = default_dirs.split(",");
-    storeSet(StorageKey.scan_dirs, dirs);
+onActivated(async () => {
+  console.log("onActivated");
+  if (playerStore.scanDirs) {
+    const num = await doScanDirs(playerStore.scanDirs);
+    unDisplayScan(num);
+    if (num) {
+      const list = await readPlayList();
+      playerStore.setPlayList(list);
+      playList.value = list;
+    }
   }
-  const result = await invoke<number>(Commands.player_scan_dirs, { dirs });
-  await invoke(Commands.player_pause);
-  unDisplayScan(result);
-};
-
-const readPlayList = async () => {
-  let list = storeGet<FileInfo[]>(StorageKey.play_list);
-  if (!list) {
-    list = JSON.parse(await invoke<string>(Commands.player_list)) as FileInfo[];
-    storeSet(StorageKey.play_list, list);
-  }
-  totalMusic.value = list.length;
-  if (list.length > 0) {
-    playList.value = list.map(it => {
-      it.path = last(it.path.split("\\")).replace(".mp3", "");
-      return it;
-    });
-  }
-};
-onBeforeMount(async () => {
-  await scanDefaultDirs();
-  await readPlayList();
 });
 
-const play = async (index: number) => {
+const play = async (index: number, originIndex: number) => {
   playerCtl.value.isPlaying = true;
   if (playerCtl.value.isPause && index == playerCtl.value.currentIndex) {
     await invoke(Commands.player_resume);
   } else {
     playerCtl.value.currentIndex = index;
-    await invoke(Commands.player_play_index, { index });
+    await invoke(Commands.player_play_index, { index: originIndex });
   }
 };
 
@@ -113,8 +104,15 @@ const isPlayingClass = (index: number): string => {
 };
 
 listen(PlayerEvents.Play, (event) => {
-  playerCtl.value.currentIndex = event.payload as number;
-  store.setTitle(playList.value[event.payload as number].path);
+  const index = event.payload as number;
+  console.log(playList.value);
+  for (let idx in playList.value) {
+    if (playList.value[idx].originIndex == index) {
+      playerCtl.value.currentIndex = Number(idx);
+      store.setTitle(playList.value[idx].path);
+      break;
+    }
+  }
 });
 
 const onItemClick = (index: number) => {
@@ -131,7 +129,7 @@ const selectedClass = (index: number): string => {
     <div class="wrapper">
       <div class="title">
         <h2>本地音乐</h2>
-        <span class="total-music">共 {{ totalMusic }} 首</span>
+        <span class="total-music">共 {{ playList.length }} 首</span>
         <span v-if="scanShow" class="scan">成功匹配到 {{ scanTotal }} 首歌曲</span>
       </div>
       <div class="select-dirs">
@@ -154,7 +152,8 @@ const selectedClass = (index: number): string => {
         <div class="seq">
           <span v-show="!isPlaying(index)" class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
           <img v-show="isPlaying(index)" class="text" src="/icons/playing.svg" alt="playing" />
-          <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play" @click="play(index)" />
+          <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play"
+            @click="play(index, item.originIndex)" />
           <img v-show="isPlaying(index)" class="play" src="/icons/pause.svg" alt="play" @click="pause" />
         </div>
         <div :class="`title ${isPlayingClass(index)}`">{{ item.path }}</div>

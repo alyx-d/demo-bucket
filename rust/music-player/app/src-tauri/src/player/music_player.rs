@@ -3,6 +3,7 @@ use rodio::{Decoder, OutputStream, Sink, Source};
 use std::fs::{read_dir, File};
 use std::io::BufReader;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::ipc::{InvokeResponseBody, IpcResponse};
 use tauri::{AppHandle, Emitter};
@@ -16,12 +17,12 @@ pub struct Player {
     sink: Arc<Sink>,
     _output_stream: OutputStream,
     controller: Arc<Mutex<Controller>>,
+    is_running: Arc<AtomicBool>,
 }
 
 struct Controller {
     play_list: Vec<FileInfo>,
     current_index: usize,
-    is_running: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -81,10 +82,10 @@ impl Player {
             app,
             sink: Arc::new(sink),
             _output_stream,
+            is_running: Arc::new(AtomicBool::new(false)),
             controller: Arc::new(Mutex::new(Controller {
                 play_list: vec![],
                 current_index: 0,
-                is_running: false,
             })),
         }
     }
@@ -114,7 +115,6 @@ impl Player {
                 size,
                 mb: byte_to_mb(size),
             });
-            self.sink.append(source);
         } else {
             println!("{} file_path not exists", file_path);
         }
@@ -135,37 +135,44 @@ impl Player {
     }
 
     pub fn is_running(&self) -> bool {
-        self.controller.lock().unwrap().is_running
+        self.is_running.load(Ordering::SeqCst)
     }
 
     pub fn play(&self) {
         let sink = self.sink.clone();
         let controller = self.controller.clone();
         let app_handle = self.app.clone();
-        std::thread::spawn(move || loop {
-            {
-                let mut controller = controller.lock().unwrap();
-                controller.is_running = true;
-                let mut index = controller.current_index;
-                let file = File::open(controller.play_list[index].path.as_str());
-                let file_name = Path::new(&controller.play_list[index].path)
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap();
-                println!("file_name: {}", file_name);
-                if let Ok(file) = file {
-                    let source = Decoder::new(BufReader::new(file)).unwrap();
-                    sink.append(source);
-                    sink.play();
-                } else {
-                    println!("file not exists {}", file_name);
+        let is_running = self.is_running.clone();
+        std::thread::spawn(move || {
+            loop {
+                {
+                    let mut controller = controller.lock().unwrap();
+                    if controller.play_list.is_empty() {
+                        break;
+                    }
+                    let mut index = controller.current_index;
+                    let file = File::open(controller.play_list[index].path.as_str());
+                    let file_name = Path::new(&controller.play_list[index].path)
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap();
+                    println!("file_name: {}", file_name);
+                    if let Ok(file) = file {
+                        let source = Decoder::new(BufReader::new(file)).unwrap();
+                        sink.append(source);
+                        sink.play();
+                        is_running.store(true, Ordering::SeqCst);
+                    } else {
+                        println!("file not exists {}", file_name);
+                    }
+                    app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
+                    index += 1;
+                    controller.current_index = index % controller.play_list.len();
                 }
-                app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
-                index += 1;
-                controller.current_index = index % controller.play_list.len();
+                sink.sleep_until_end();
             }
-            sink.sleep_until_end();
+            is_running.store(false, Ordering::SeqCst);
         });
     }
 

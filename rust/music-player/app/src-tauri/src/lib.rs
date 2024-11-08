@@ -29,7 +29,6 @@ pub fn run() {
             commands::button2,
             commands::get_default_dirs,
             commands::player_scan_dirs,
-            commands::player_play,
             commands::player_play_index,
             commands::player_pause,
             commands::player_resume,

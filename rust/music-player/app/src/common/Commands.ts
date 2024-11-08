@@ -1,7 +1,6 @@
 enum Commands {
     get_default_dirs = "get_default_dirs",
     player_scan_dirs = "player_scan_dirs",
-    player_play = "player_play",
     player_play_index = "player_play_index",
     player_pause = "player_pause",
     player_resume = "player_resume",

@@ -5,6 +5,8 @@ enum StorageKey {
   play_bottom = "play_bottom",
   /// playing title
   playing_title = "playing_title",
+  /// playing index
+  playing_index = "playing_index",
 }
 
 export default StorageKey;

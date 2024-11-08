@@ -28,13 +28,10 @@ pub fn player_scan_dirs(player: State<Mutex<Player>>, dirs: Vec<String>) -> usiz
     }
     if !player.is_running() {
         player.play();
+        while !player.is_running() {}
+        player.pause();
     }
     player.len() - len
-}
-
-#[tauri::command]
-pub fn player_play(player: State<Mutex<Player>>) {
-    player.lock().unwrap().play();
 }
 
 #[tauri::command]
