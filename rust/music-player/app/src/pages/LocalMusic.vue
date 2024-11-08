@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onActivated, ref } from "vue";
+import { onActivated, ref, watch } from "vue";
 import Dialog, { ExposeMethods } from "../components/Dialog.vue";
 import SelectLocalDir from "../components/SelectLocalDir.vue";
 import { invoke } from "@tauri-apps/api/core";
@@ -41,12 +41,14 @@ const playerStore = usePlayerStateStore();
 const playList = ref<OwnFileInfo[]>(storeGet<OwnFileInfo[]>(StorageKey.play_list) ?? []);
 
 const playerCtl = ref<PlayerCtl>({
-  currentIndex: 0,
-  isPlaying: false,
+  currentIndex: -1,
+  isPlaying: playerStore.isPlaying,
   isPause: false,
 });
-
-
+watch(() => playerStore.isPlaying, val => {
+  playerCtl.value.isPlaying = val;
+  playerCtl.value.isPause = !val;
+});
 
 const dialog = ref<ExposeMethods | null>(null);
 const openDialog = () => {
@@ -101,6 +103,10 @@ const isPlayingClass = (index: number): string => {
   return (playerCtl.value.isPlaying || playerCtl.value.isPause) && playerCtl.value.currentIndex == index ? "playing" : "";
 };
 
+const isPauseClass = (index: number): string => {
+  return playerCtl.value.isPause && playerCtl.value.currentIndex == index ? "pause" : "";
+};
+
 listen(PlayerEvents.Play, (event) => {
   const index = event.payload as number;
   playerCtl.value.isPlaying = true;
@@ -149,7 +155,7 @@ const selectedClass = (index: number): string => {
       </div>
       <div :class="`item ${selectedClass(index)}`" v-for="(item, index) in playList" :key="index"
         @click="onItemClick(index)">
-        <div class="seq">
+        <div :class="`seq ${isPauseClass(index)}`">
           <span v-show="!isPlaying(index)" class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
           <img v-show="isPlaying(index)" class="text" src="/icons/playing.svg" alt="playing" />
           <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play"
@@ -204,7 +210,7 @@ const selectedClass = (index: number): string => {
 
     .item {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       padding: 15px 20px;
       font-size: 13px;
 
@@ -236,20 +242,19 @@ const selectedClass = (index: number): string => {
         font-size: 12px;
         display: flex;
         align-items: center;
+        justify-content: center;
         position: relative;
 
         .play,
         .text {
           position: absolute;
-          top: -12px;
+          top: 50%;
+          transform: translateY(-50%);
           width: 15px;
           height: 15px;
           transition: opacity 10ms ease-in-out;
         }
 
-        img.text {
-          animation: reverse 0.5s infinite;
-        }
 
         .play {
           opacity: 0;
@@ -277,6 +282,16 @@ const selectedClass = (index: number): string => {
 
   .playing {
     color: red;
+  }
+
+  .pause {
+    .text {
+      opacity: 0 !important;
+    }
+
+    .play {
+      opacity: 1 !important;
+    }
   }
 }
 

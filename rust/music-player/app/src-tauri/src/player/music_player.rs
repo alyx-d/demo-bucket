@@ -208,8 +208,6 @@ impl Player {
     }
 
     pub fn next(&self) {
-        let mut controller = self.controller.lock().unwrap();
-        controller.current_index += 1;
         self.stop();
     }
 

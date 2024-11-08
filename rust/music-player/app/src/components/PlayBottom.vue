@@ -4,6 +4,8 @@ import { usePlayBottomStore } from '../store/PlayBottomStore';
 import { usePlayerStateStore } from '../store/PlayerStateStore';
 import ProcessBar from './ProcessBar.vue';
 import { secsToDuration } from '../common/Utils';
+import { invoke } from '@tauri-apps/api/core';
+import Commands from '../common/Commands';
 
 const store = usePlayBottomStore();
 const playerStore = usePlayerStateStore();
@@ -11,6 +13,24 @@ const playerStore = usePlayerStateStore();
 const paused = computed(() => {
     return playerStore.isPlaying ? "" : "paused";
 });
+
+const onPreviousClick = async () => {
+    invoke(Commands.player_prev);
+};
+
+const onPlayOrPauseClick = async () => {
+    if (playerStore.isPlaying) {
+        playerStore.setPlaying(false, -1);
+        invoke(Commands.player_pause);
+    } else {
+        playerStore.setPlaying(true, playerStore.playingIndex, true);
+        invoke(Commands.player_resume);
+    }
+};
+
+const onNextClick = async () => {
+    invoke(Commands.player_next);
+};
 </script>
 
 <template>
@@ -26,14 +46,14 @@ const paused = computed(() => {
             </div>
             <div class="operation-group">
                 <div class="operations">
-                    <div class="img-wrapper previous">
+                    <div class="img-wrapper previous" @click="onPreviousClick">
                         <img class="icon" src="/icons/previous.svg" alt="previous" />
                     </div>
-                    <div class="img-wrapper play">
+                    <div class="img-wrapper play" @click="onPlayOrPauseClick">
                         <img class="icon" src="/icons/play_fill_white.svg" alt="play" v-if="!playerStore.isPlaying" />
                         <img class="icon" src="/icons/pause_white.svg" alt="play" v-if="playerStore.isPlaying" />
                     </div>
-                    <div class="img-wrapper next">
+                    <div class="img-wrapper next" @click="onNextClick">
                         <img class="icon" src="/icons/next.svg" alt="next" />
                     </div>
                 </div>
