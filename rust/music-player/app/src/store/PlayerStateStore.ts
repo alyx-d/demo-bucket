@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { FileInfo, OwnFileInfo } from "../pages/LocalMusic.vue";
-import { last, storeGet, storeSet } from "../common/Utils";
+import { durationToSecs, last, storeGet, storeSet } from "../common/Utils";
 import StorageKey from "../common/StorageKey";
 import { invoke } from "@tauri-apps/api/core";
 import Commands from "../common/Commands";
@@ -41,6 +41,10 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         storeGet<OwnFileInfo[]>(StorageKey.play_list),
     );
 
+    const playingPos = ref(storeGet<number>(StorageKey.playing_pos) ?? 0);
+    const totalDuration = ref(storeGet<number>(StorageKey.total_duration) ?? 0);
+    const secTimer = ref<number | null>(null);
+
     if (!scanDirs.value) {
         getDefaultDirs().then((dirs) => {
             scanDirs.value = dirs;
@@ -54,12 +58,48 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         });
     }
 
-    const setPlaying = (flag: boolean) => {
+    const setPlaying = (
+        flag: boolean,
+        index: number,
+        isResume: boolean = false,
+    ) => {
         isPlaying.value = flag;
+        if (index >= 0 && index < playList.value!.length) {
+            playingIndex.value = index;
+            storeSet(StorageKey.playing_index, playingIndex.value);
+        }
+        if (secTimer.value) {
+            clearInterval(secTimer.value);
+            secTimer.value = null;
+        }
+        if (flag) {
+            if (!isResume) {
+                playingPos.value = 0;
+            } else {
+                playingPos.value = storeGet<number>(StorageKey.playing_pos) ??
+                    0;
+            }
+            totalDuration.value = durationToSecs(
+                playList.value![index].totalDuration,
+            );
+            storeSet(StorageKey.total_duration, totalDuration.value);
+            const timer = setInterval(() => {
+                if (playingPos.value >= totalDuration.value) {
+                    clearInterval(timer);
+                    secTimer.value = null;
+                    playingPos.value = 0;
+                } else {
+                    playingPos.value += 1;
+                }
+                storeSet(StorageKey.playing_pos, playingPos.value);
+            }, 1000);
+            secTimer.value = timer;
+        }
     };
 
     const setPlayingIndex = (index: number) => {
         playingIndex.value = index;
+        storeSet(StorageKey.playing_index, index);
     };
 
     const setPlayList = (list: OwnFileInfo[]) => {
@@ -72,6 +112,11 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         storeSet(StorageKey.scan_dirs, dirs);
     };
 
+    const setPlayingPos = (pos: number) => {
+        playingPos.value = pos;
+        storeSet(StorageKey.playing_pos, pos);
+    };
+
     return {
         isPlaying,
         setPlaying,
@@ -81,5 +126,8 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         setScanDirs,
         playList,
         setPlayList,
+        playingPos,
+        totalDuration,
+        setPlayingPos,
     };
 });

@@ -9,6 +9,9 @@ enum Commands {
     player_set_volume = "player_set_volume",
     player_set_speed = "player_set_speed",
     player_list = "player_list",
+    player_seek = "player_seek",
+    player_get_pos = "player_get_pos",
+    player_is_paused = "player_is_paused",
 }
 
 export default Commands;

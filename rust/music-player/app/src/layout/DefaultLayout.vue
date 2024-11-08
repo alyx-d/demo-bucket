@@ -9,7 +9,7 @@ import { usePlayBottomStore } from '../store/PlayBottomStore';
 const store = usePlayBottomStore();
 
 const paddingBottom = ref("0px");
-watch(() => store.playButtonShow, (value) => {
+watch(() => store.playBottonShow, (value) => {
   if (value) {
     paddingBottom.value = "75px";
   } else {

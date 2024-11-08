@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .progress-bar {
+                width: 100%;
+                background-color: #f3f3f3;
+                border-radius: 5px;
+                overflow: hidden;
+                position: relative;
+                height: 30px;
+            }
+
+            .progress {
+                width: 50%; /* 初始进度 */
+                height: 100%;
+                background-color: #4caf50;
+                text-align: center;
+                line-height: 30px; /* 让文字垂直居中 */
+                color: white;
+                border-radius: 5px 0 0 5px; /* 让左侧圆角 */
+            }
+
+            .draggable-ball {
+                width: 20px;
+                height: 20px;
+                background-color: #ff5722;
+                border-radius: 50%;
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="progress-bar" id="progressBar">
+            <div class="progress" id="progress">50%</div>
+            <div class="draggable-ball" id="draggableBall" style="left: 50%">
+            </div>
+        </div>
+
+        <script>
+            const progressBar = document.getElementById("progressBar");
+            const progress = document.getElementById("progress");
+            const draggableBall = document.getElementById("draggableBall");
+
+            progressBar.addEventListener("mousedown", function (e) {
+                const progressBarWidth = progressBar.offsetWidth;
+
+                function onMouseMove(e) {
+                    const offsetX = e.clientX -
+                        progressBar.getBoundingClientRect().left;
+                    const percentage = Math.min(
+                        Math.max((offsetX / progressBarWidth) * 100, 0),
+                        100,
+                    );
+                    progress.style.width = percentage + "%";
+                    progress.innerText = Math.round(percentage) + "%";
+                    draggableBall.style.left = percentage + "%";
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener("mouseup", onMouseUp);
+                }
+
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", onMouseUp);
+            });
+
+            draggableBall.addEventListener("mousedown", function (e) {
+                e.stopPropagation(); // 防止拖动小球时触发进度条的mousedown事件
+                const progressBarWidth = progressBar.offsetWidth;
+
+                function onMouseMove(e) {
+                    const offsetX = e.clientX -
+                        progressBar.getBoundingClientRect().left;
+                    const percentage = Math.min(
+                        Math.max((offsetX / progressBarWidth) * 100, 0),
+                        100,
+                    );
+                    progress.style.width = percentage + "%";
+                    progress.innerText = Math.round(percentage) + "%";
+                    draggableBall.style.left = percentage + "%";
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener("mouseup", onMouseUp);
+                }
+
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", onMouseUp);
+            });
+        </script>
+    </body>
+</html>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onActivated, ref, watch } from "vue";
+import { onActivated, ref } from "vue";
 import Dialog, { ExposeMethods } from "../components/Dialog.vue";
 import SelectLocalDir from "../components/SelectLocalDir.vue";
 import { invoke } from "@tauri-apps/api/core";
@@ -45,10 +45,7 @@ const playerCtl = ref<PlayerCtl>({
   isPlaying: false,
   isPause: false,
 });
-watch(playerCtl, val => {
-  playerStore.setPlayingIndex(playList.value[val.currentIndex].originIndex);
-  playerStore.setPlaying(val.isPlaying);
-});
+
 
 
 const dialog = ref<ExposeMethods | null>(null);
@@ -67,7 +64,6 @@ const unDisplayScan = (num: number) => {
 };
 
 onActivated(async () => {
-  console.log("onActivated");
   if (playerStore.scanDirs) {
     const num = await doScanDirs(playerStore.scanDirs);
     unDisplayScan(num);
@@ -80,8 +76,9 @@ onActivated(async () => {
 });
 
 const play = async (index: number, originIndex: number) => {
-  playerCtl.value.isPlaying = true;
   if (playerCtl.value.isPause && index == playerCtl.value.currentIndex) {
+    playerCtl.value.isPlaying = true;
+    playerStore.setPlaying(true, originIndex, true);
     await invoke(Commands.player_resume);
   } else {
     playerCtl.value.currentIndex = index;
@@ -92,6 +89,7 @@ const play = async (index: number, originIndex: number) => {
 const pause = async () => {
   playerCtl.value.isPlaying = false;
   playerCtl.value.isPause = true;
+  playerStore.setPlaying(false, -1);
   await invoke(Commands.player_pause);
 };
 
@@ -105,7 +103,9 @@ const isPlayingClass = (index: number): string => {
 
 listen(PlayerEvents.Play, (event) => {
   const index = event.payload as number;
-  console.log(playList.value);
+  playerCtl.value.isPlaying = true;
+  playerStore.setPlaying(true, index);
+  playerStore.setPlayingIndex(index);
   for (let idx in playList.value) {
     if (playList.value[idx].originIndex == index) {
       playerCtl.value.currentIndex = Number(idx);

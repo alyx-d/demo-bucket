@@ -12,8 +12,8 @@ pub struct Player {
     current_sink: Arc<Sink>,
     _stream: rodio::OutputStream,
     on_per_seconds: Option<fn(u64)>,
-    singal_sender: Sender<u64>,
-    singal_receiver: Receiver<u64>,
+    signal_sender: Sender<u64>,
+    signal_receiver: Receiver<u64>,
     controller: Arc<Mutex<Controller>>,
 }
 
@@ -46,8 +46,8 @@ impl Player {
             current_sink: Arc::new(sink),
             _stream, // 保存stream 确保它的生命周期与播放器对象相同，以保持音频输出设备的连接。
             on_per_seconds: None,
-            singal_sender: signal_sender,
-            singal_receiver: signal_receiver,
+            signal_sender: signal_sender,
+            signal_receiver: signal_receiver,
             controller: Arc::new(Mutex::new(Controller {
                 play_list: Vec::new(),
                 current_index: 0,
@@ -78,7 +78,7 @@ impl Player {
         let controller = self.controller.clone();
         let sink = self.current_sink.clone();
         sink.set_volume(1.0);
-        let sender = self.singal_sender.clone();
+        let sender = self.signal_sender.clone();
         std::thread::spawn(move || loop {
             {
                 let mut controller = controller.lock().unwrap();
@@ -184,7 +184,7 @@ impl Player {
 
     pub fn wait(&self) {
         loop {
-            self.singal_receiver.recv().unwrap();
+            self.signal_receiver.recv().unwrap();
             self.current_sink.sleep_until_end();
         }
     }

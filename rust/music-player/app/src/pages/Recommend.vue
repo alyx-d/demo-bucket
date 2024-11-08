@@ -15,7 +15,7 @@ const onButton2Click = () => {
 <template>
     <div class="recommend">
         <span>Recommend</span>
-        <div>{{ store.playButtonShow }}</div>
+        <div>{{ store.playBottonShow }}</div>
         <div class="test">
             <button type="button" @click="onButton1Click">hide</button>
             <button type="button" @click="onButton2Click">show</button>

@@ -5,6 +5,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tauri::ipc::{InvokeResponseBody, IpcResponse};
 use tauri::{AppHandle, Emitter};
 
@@ -180,6 +181,18 @@ impl Player {
         let mut controller = self.controller.lock().unwrap();
         controller.current_index = index;
         self.stop();
+    }
+
+    pub fn seek(&self, pos: Duration) {
+        self.sink.try_seek(pos).unwrap();
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.sink.is_paused()
+    }
+
+    pub fn get_pos(&self) -> Duration {
+        self.sink.get_pos()
     }
 
     pub fn stop(&self) {

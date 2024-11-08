@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{sync::Mutex, time::Duration};
 
 use tauri::{ipc::IpcResponse, State};
 
@@ -77,4 +77,19 @@ pub fn player_list(player: State<Mutex<Player>>) -> FileInfoVec {
 #[tauri::command]
 pub fn player_play_index(player: State<Mutex<Player>>, index: usize) {
     player.lock().unwrap().play_index(index);
+}
+
+#[tauri::command]
+pub fn player_seek(player: State<Mutex<Player>>, pos: u64) {
+    player.lock().unwrap().seek(Duration::from_secs(pos));
+}
+
+#[tauri::command]
+pub fn player_get_pos(player: State<Mutex<Player>>) -> u64 {
+    player.lock().unwrap().get_pos().as_secs()
+}
+
+#[tauri::command]
+pub fn player_is_paused(player: State<Mutex<Player>>) -> bool {
+    player.lock().unwrap().is_paused()
 }

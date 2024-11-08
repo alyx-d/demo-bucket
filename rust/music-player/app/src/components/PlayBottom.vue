@@ -1,26 +1,52 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { usePlayBottomStore } from '../store/PlayBottomStore';
+import { usePlayerStateStore } from '../store/PlayerStateStore';
+import ProcessBar from './ProcessBar.vue';
+import { secsToDuration } from '../common/Utils';
 
 const store = usePlayBottomStore();
+const playerStore = usePlayerStateStore();
 
-const playing = computed(() => {
-    return true ? "playing" : "";
+const paused = computed(() => {
+    return playerStore.isPlaying ? "" : "paused";
 });
 </script>
 
 <template>
     <transition name="fade">
-        <div class="play-bottom" v-if="store.playButtonShow">
+        <div class="play-bottom" v-if="store.playBottonShow">
             <div class="file-info">
                 <div class="img-wrapper">
-                    <img :class="playing" src="../assets/ac.jpg" alt="img" />
+                    <img :class="`playing ${paused}`" src="../assets/ac.jpg" alt="img" />
                 </div>
                 <div class="title">
                     <span>{{ store.title }}</span>
                 </div>
             </div>
-            <div class="operations"></div>
+            <div class="operation-group">
+                <div class="operations">
+                    <div class="img-wrapper previous">
+                        <img class="icon" src="/icons/previous.svg" alt="previous" />
+                    </div>
+                    <div class="img-wrapper play">
+                        <img class="icon" src="/icons/play_fill_white.svg" alt="play" v-if="!playerStore.isPlaying" />
+                        <img class="icon" src="/icons/pause_white.svg" alt="play" v-if="playerStore.isPlaying" />
+                    </div>
+                    <div class="img-wrapper next">
+                        <img class="icon" src="/icons/next.svg" alt="next" />
+                    </div>
+                </div>
+                <div class="process">
+                    <div class="current-duration">
+                        <span>{{ secsToDuration(playerStore.playingPos) }}</span>
+                    </div>
+                    <ProcessBar :process="playerStore.playingPos" class="process-bar" />
+                    <div class="total-duration">
+                        <span>{{ secsToDuration(playerStore.totalDuration) }}</span>
+                    </div>
+                </div>
+            </div>
             <div class="button-group"></div>
         </div>
     </transition>
@@ -61,6 +87,10 @@ const playing = computed(() => {
 
                 &.playing {
                     animation: spin 5s linear infinite;
+
+                    &.paused {
+                        animation-play-state: paused;
+                    }
                 }
             }
         }
@@ -79,15 +109,77 @@ const playing = computed(() => {
         margin: 10px 30px;
     }
 
-    .operations {
+    .operation-group {
         width: 500px;
         height: 100%;
-        background-color: red;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .operations {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            .img-wrapper {
+                width: 25px;
+                height: 25px;
+                cursor: pointer;
+                opacity: 0.9;
+
+                &:not(:last-child) {
+                    margin-right: 25px;
+                }
+
+                &.play {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background-color: var(--main-color);
+
+                    & img {
+                        padding: 10px;
+
+                    }
+
+                    &:hover {
+                        opacity: 1;
+                        transform: scale(1.05);
+                    }
+                }
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    opacity: 0.9;
+
+                    &:hover {
+                        opacity: 1;
+                        transform: scale(1.05);
+                    }
+                }
+            }
+        }
+
+        .process {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 9px;
+            color: #777;
+
+            .process-bar {
+                width: 250px;
+            }
+        }
     }
 
     .button-group {
         flex: 1;
     }
+
+
 }
 
 @keyframes spin {

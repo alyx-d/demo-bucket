@@ -27,3 +27,19 @@ export const storeGet = <T>(key: string): T | null => {
     }
     return null;
 };
+
+export const durationToSecs = (duration: string): number => {
+    const arr = duration.split(":");
+    if (!duration || arr.length != 2) {
+        throw new Error("duration is invalid");
+    }
+    return Number(arr[0]) * 60 + Number(arr[1]);
+};
+
+export const secsToDuration = (secs: number): string => {
+    const min = Math.floor(secs / 60);
+    const sec = secs % 60;
+    return `${min.toString().padStart(2, "0")}:${
+        sec.toString().padStart(2, "0")
+    }`;
+};
