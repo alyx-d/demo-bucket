@@ -5,9 +5,10 @@ import SelectLocalDir from "../components/SelectLocalDir.vue";
 import { invoke } from "@tauri-apps/api/core";
 import StorageKey from "../common/StorageKey.ts";
 import Commands from "../common/Commands.ts";
-import { last } from "../common/Utils.ts";
+import { last, storeGet, storeSet } from "../common/Utils.ts";
 import { listen } from "@tauri-apps/api/event";
 import PlayerEvents from "../common/PlayerEvents.ts";
+import { usePlayBottomStore } from "../store/PlayBottomStore.ts";
 
 export interface FileInfo {
   path: string;
@@ -28,6 +29,9 @@ interface PlayerCtl {
 const totalMusic = ref(0);
 const scanTotal = ref(0);
 const scanShow = ref(false);
+const selectedItemIdx = ref(-1);
+
+const store = usePlayBottomStore();
 
 const playList = ref<FileInfo[]>([]);
 
@@ -36,6 +40,7 @@ const playerCtl = ref<PlayerCtl>({
   isPlaying: false,
   isPause: false,
 });
+
 
 const dialog = ref<ExposeMethods | null>(null);
 const openDialog = () => {
@@ -53,29 +58,22 @@ const unDisplayScan = (num: number) => {
 };
 
 const scanDefaultDirs = async () => {
-  const scan_dirs_str = localStorage.getItem(StorageKey.scan_dirs);
-  let dirs: string[] = [];
-  if (!scan_dirs_str) {
-    const default_dirs = await invoke(Commands.get_default_dirs) as string;
+  let dirs = storeGet<string[]>(StorageKey.scan_dirs);
+  if (!dirs) {
+    const default_dirs = await invoke<string>(Commands.get_default_dirs);
     dirs = default_dirs.split(",");
-    localStorage.setItem(StorageKey.scan_dirs, JSON.stringify(dirs));
-  } else {
-    dirs = JSON.parse(scan_dirs_str) as string[];
+    storeSet(StorageKey.scan_dirs, dirs);
   }
-  const result = await invoke(Commands.player_scan_dirs, { dirs }) as number;
+  const result = await invoke<number>(Commands.player_scan_dirs, { dirs });
   await invoke(Commands.player_pause);
   unDisplayScan(result);
 };
 
 const readPlayList = async () => {
-  const localList = localStorage.getItem(StorageKey.play_list);
-  let list: FileInfo[] = [];
-  if (!localList) {
-    list = await invoke(Commands.player_list) as FileInfo[];
-    console.log("list:", list);
-    localStorage.setItem(StorageKey.play_list, JSON.stringify(list));
-  } else {
-    list = JSON.parse(localList) as FileInfo[];
+  let list = storeGet<FileInfo[]>(StorageKey.play_list);
+  if (!list) {
+    list = JSON.parse(await invoke<string>(Commands.player_list)) as FileInfo[];
+    storeSet(StorageKey.play_list, list);
   }
   totalMusic.value = list.length;
   if (list.length > 0) {
@@ -110,14 +108,22 @@ const isPlaying = (index: number) => {
   return playerCtl.value.isPlaying && playerCtl.value.currentIndex == index;
 };
 
-const isPlayingClass = (index: number) => {
+const isPlayingClass = (index: number): string => {
   return (playerCtl.value.isPlaying || playerCtl.value.isPause) && playerCtl.value.currentIndex == index ? "playing" : "";
 };
 
 listen(PlayerEvents.Play, (event) => {
-  console.log("PlayerEvents.Play", event);
   playerCtl.value.currentIndex = event.payload as number;
+  store.setTitle(playList.value[event.payload as number].path);
 });
+
+const onItemClick = (index: number) => {
+  selectedItemIdx.value = index;
+};
+
+const selectedClass = (index: number): string => {
+  return selectedItemIdx.value == index ? "selected" : "";
+};
 </script>
 
 <template>
@@ -143,7 +149,8 @@ listen(PlayerEvents.Play, (event) => {
         <div class="total-duration">时长</div>
         <div class="size">大小</div>
       </div>
-      <div class="item" v-for="(item, index) in playList" :key="index">
+      <div :class="`item ${selectedClass(index)}`" v-for="(item, index) in playList" :key="index"
+        @click="onItemClick(index)">
         <div class="seq">
           <span v-show="!isPlaying(index)" class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
           <img v-show="isPlaying(index)" class="text" src="/icons/playing.svg" alt="playing" />
@@ -162,7 +169,6 @@ listen(PlayerEvents.Play, (event) => {
 <style scoped lang="css">
 .local-music {
   width: 100%;
-  height: 100%;
 
   .wrapper {
     width: 100%;
@@ -216,6 +222,15 @@ listen(PlayerEvents.Play, (event) => {
         }
       }
 
+      &.selected {
+        background-color: #fff;
+        border-radius: 10px;
+
+        .text {
+          opacity: 1;
+        }
+      }
+
       .seq {
         width: 40px;
         text-align: center;
@@ -231,6 +246,10 @@ listen(PlayerEvents.Play, (event) => {
           width: 15px;
           height: 15px;
           transition: opacity 10ms ease-in-out;
+        }
+
+        img.text {
+          animation: reverse 0.5s infinite;
         }
 
         .play {
@@ -259,6 +278,25 @@ listen(PlayerEvents.Play, (event) => {
 
   .playing {
     color: red;
+  }
+}
+
+@keyframes reverse {
+
+  0% {
+    transform: scaleX(1);
+  }
+
+  49.9% {
+    transform: scaleX(1);
+  }
+
+  50% {
+    transform: scaleX(-1);
+  }
+
+  100% {
+    transform: scaleX(-1);
   }
 }
 </style>

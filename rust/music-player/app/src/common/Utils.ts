@@ -15,3 +15,15 @@ export const last = <T>(arr: T[]) => {
 export const byteToMB = (byte: number): string => {
     return (byte / 1024 / 1024).toFixed(2) + "MB";
 };
+
+export const storeSet = <T>(key: string, value: T) => {
+    localStorage.setItem(key, JSON.stringify(value));
+};
+
+export const storeGet = <T>(key: string): T | null => {
+    const value = localStorage.getItem(key);
+    if (value) {
+        return JSON.parse(value);
+    }
+    return null;
+};

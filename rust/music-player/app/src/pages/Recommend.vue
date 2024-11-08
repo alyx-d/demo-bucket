@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core';
-import { ref } from 'vue';
-const b1 = ref('');
-const b2 = ref('');
-const onButton1Click = async () => {
-    b1.value = await invoke("button1");
+import { usePlayBottomStore } from '../store/PlayBottomStore';
+
+const store = usePlayBottomStore();
+
+const onButton1Click = () => {
+    store.hide();
 }
 
-const onButton2Click = async () => {
-    b2.value = await invoke("button2");
+const onButton2Click = () => {
+    store.show();
 }
 </script>
 
 <template>
     <div class="recommend">
         <span>Recommend</span>
-        <div>{{ b1 }}</div>
-        <div>{{ b2 }}</div>
+        <div>{{ store.playButtonShow }}</div>
         <div class="test">
-            <button type="button" @click="onButton1Click">Button 1</button>
-            <button type="button" @click="onButton2Click">Button 2</button>
+            <button type="button" @click="onButton1Click">hide</button>
+            <button type="button" @click="onButton2Click">show</button>
         </div>
     </div>
 </template>

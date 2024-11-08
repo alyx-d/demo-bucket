@@ -7,8 +7,13 @@
     <title>Tauri + Vue + Typescript App</title>
   </head>
 
-  <body oncontextmenu="return false;">
+  <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script type="module">
+      if (import.meta.env.PROD) {
+        document.querySelector("body").oncontextmenu = () => false;
+      }
+    </script>
   </body>
 </html>

@@ -12,5 +12,6 @@ import DefaultLayout from './layout/DefaultLayout.vue'
 main {
   min-width: 800px;
   min-height: 600px;
+
 }
 </style>

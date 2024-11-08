@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+
 </script>
 
 <template>
@@ -18,8 +19,6 @@
 .content {
   padding: 50px 30px 30px 30px;
   height: 100%;
-  background-color: #f7f9fc;
-  overflow-y: auto;
   min-width: 768px;
 }
 

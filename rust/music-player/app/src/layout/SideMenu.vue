@@ -42,9 +42,7 @@ const isActive = (path: string): string => {
 .side-menu {
   width: 200px;
   min-width: 200px;
-  height: 100vh;
-  min-height: 100vh;
-  background-color: #f0f3f6;
+  background-color: #F0F3F6;
 
   .wrapper {
     width: 100%;
