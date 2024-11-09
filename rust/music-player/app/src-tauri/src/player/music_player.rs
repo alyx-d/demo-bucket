@@ -135,6 +135,11 @@ impl Player {
             }
         }
     }
+
+    pub fn set_add_len(&self, len: usize) {
+        self.add_len.store(len, Ordering::SeqCst);
+    }
+
     pub fn add_len(&self) -> usize {
         self.add_len.load(Ordering::SeqCst)
     }
