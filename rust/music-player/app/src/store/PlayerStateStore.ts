@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { FileInfo, OwnFileInfo } from "../pages/LocalMusic.vue";
 import { durationToSecs, last, storeGet, storeSet } from "../common/Utils";
 import StorageKey from "../common/StorageKey";
 import { invoke } from "@tauri-apps/api/core";
 import Commands from "../common/Commands";
+import { FileInfo, OwnFileInfo } from "../types/Components.interface";
 
 const getDefaultDirs = async (): Promise<string[]> => {
     const default_dirs = await invoke<string>(Commands.get_default_dirs);
@@ -25,24 +25,19 @@ export const readPlayList = async (): Promise<OwnFileInfo[]> => {
         item.path = last(item.path.split("\\")).replace(".mp3", "");
         (item as OwnFileInfo).originIndex = index;
     });
-    storeSet(StorageKey.play_list, list);
     return list as OwnFileInfo[];
 };
 
 export const usePlayerStateStore = defineStore("player-state", () => {
     const isPlaying = ref(false);
-    const playingIndex = ref<number>(
-        storeGet<number>(StorageKey.playing_index) ?? 0,
+    const playingIndex = ref<number>(-1);
+    const scanDirs = ref<string[]>(
+        storeGet<string[]>(StorageKey.scan_dirs) ?? [],
     );
-    const scanDirs = ref<string[] | null>(
-        storeGet<string[]>(StorageKey.scan_dirs),
-    );
-    const playList = ref<OwnFileInfo[] | null>(
-        storeGet<OwnFileInfo[]>(StorageKey.play_list),
-    );
+    const playList = ref<OwnFileInfo[]>([]);
 
-    const playingPos = ref(storeGet<number>(StorageKey.playing_pos) ?? 0);
-    const totalDuration = ref(storeGet<number>(StorageKey.total_duration) ?? 0);
+    const playingPos = ref(0);
+    const totalDuration = ref(0);
     const secTimer = ref<number | null>(null);
 
     if (!scanDirs.value) {
@@ -66,7 +61,6 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         isPlaying.value = flag;
         if (index >= 0 && index < playList.value!.length) {
             playingIndex.value = index;
-            storeSet(StorageKey.playing_index, playingIndex.value);
         }
         if (secTimer.value) {
             clearInterval(secTimer.value);
@@ -75,14 +69,10 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         if (flag) {
             if (!isResume) {
                 playingPos.value = 0;
-            } else {
-                playingPos.value = storeGet<number>(StorageKey.playing_pos) ??
-                    0;
             }
             totalDuration.value = durationToSecs(
                 playList.value![index].totalDuration,
             );
-            storeSet(StorageKey.total_duration, totalDuration.value);
             const timer = setInterval(() => {
                 if (playingPos.value >= totalDuration.value) {
                     clearInterval(timer);
@@ -91,7 +81,6 @@ export const usePlayerStateStore = defineStore("player-state", () => {
                 } else {
                     playingPos.value += 1;
                 }
-                storeSet(StorageKey.playing_pos, playingPos.value);
             }, 1000);
             secTimer.value = timer;
         }
@@ -99,12 +88,10 @@ export const usePlayerStateStore = defineStore("player-state", () => {
 
     const setPlayingIndex = (index: number) => {
         playingIndex.value = index;
-        storeSet(StorageKey.playing_index, index);
     };
 
     const setPlayList = (list: OwnFileInfo[]) => {
         playList.value = list;
-        storeSet(StorageKey.play_list, list);
     };
 
     const setScanDirs = (dirs: string[]) => {
@@ -114,7 +101,10 @@ export const usePlayerStateStore = defineStore("player-state", () => {
 
     const setPlayingPos = (pos: number) => {
         playingPos.value = pos;
-        storeSet(StorageKey.playing_pos, pos);
+    };
+
+    const setTotalDuration = (duration: number) => {
+        totalDuration.value = duration;
     };
 
     return {
@@ -129,5 +119,6 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         playingPos,
         totalDuration,
         setPlayingPos,
+        setTotalDuration,
     };
 });

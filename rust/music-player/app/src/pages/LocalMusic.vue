@@ -8,28 +8,9 @@ import { listen } from "@tauri-apps/api/event";
 import PlayerEvents from "../common/PlayerEvents.ts";
 import { usePlayBottomStore } from "../store/PlayBottomStore.ts";
 import { doScanDirs, readPlayList, usePlayerStateStore } from "../store/PlayerStateStore.ts";
-import { storeGet } from "../common/Utils.ts";
+import { durationToSecs, storeGet } from "../common/Utils.ts";
 import StorageKey from "../common/StorageKey.ts";
-
-export interface FileInfo {
-  path: string;
-  totalDuration: string;
-  size: string;
-  mb: string;
-  title: string;
-  artist: string;
-  album: string;
-}
-
-export interface OwnFileInfo extends FileInfo {
-  originIndex: number;
-};
-
-interface PlayerCtl {
-  currentIndex: number;
-  isPlaying: boolean;
-  isPause: boolean;
-}
+import { OwnFileInfo, PlayerCtl } from "../types/Components.interface.ts";
 
 const scanTotal = ref(0);
 const scanShow = ref(false);
@@ -38,7 +19,10 @@ const selectedItemIdx = ref(-1);
 const store = usePlayBottomStore();
 const playerStore = usePlayerStateStore();
 
-const playList = ref<OwnFileInfo[]>(storeGet<OwnFileInfo[]>(StorageKey.play_list) ?? []);
+const playList = ref<OwnFileInfo[]>(playerStore.playList ?? []);
+watch(() => playerStore.playList, (val) => {
+  playList.value = val ?? [];
+});
 
 const playerCtl = ref<PlayerCtl>({
   currentIndex: -1,
@@ -112,6 +96,7 @@ listen(PlayerEvents.Play, (event) => {
   playerCtl.value.isPlaying = true;
   playerStore.setPlaying(true, index);
   playerStore.setPlayingIndex(index);
+  playerStore.setTotalDuration(durationToSecs(playList.value[index].totalDuration));
   for (let idx in playList.value) {
     if (playList.value[idx].originIndex == index) {
       playerCtl.value.currentIndex = Number(idx);

@@ -4,7 +4,7 @@ import AppName from './AppName.vue';
 import { ref, watch } from 'vue';
 
 const route = useRoute();
-const active = ref("/recommend");
+const active = ref("/local-music");
 watch(() => route.path, value => {
   active.value = value;
 });
@@ -18,16 +18,6 @@ const isActive = (path: string): string => {
   <div class="side-menu">
     <AppName />
     <div class="wrapper">
-      <div class="nav">
-        <router-link draggable="false" :class="isActive('/recommend')" to="/recommend">云音乐精选</router-link>
-        <router-link draggable="false" :class="isActive('/podcast')" to="/podcast">博客</router-link>
-        <router-link draggable="false" :class="isActive('/community')" to="/community">社区</router-link>
-      </div>
-    </div>
-    <div class="device-line">
-      <hr />
-    </div>
-    <div class="wrapper">
       <div class="tip">
         <span class="text">我的</span>
       </div>
@@ -35,6 +25,17 @@ const isActive = (path: string): string => {
         <router-link draggable="false" :class="isActive('/local-music')" to="/local-music">本地音乐</router-link>
       </div>
     </div>
+    <div class="device-line">
+      <hr />
+    </div>
+    <div class="wrapper">
+      <div class="nav">
+        <router-link draggable="false" :class="isActive('/recommend')" to="/recommend">云音乐精选</router-link>
+        <router-link draggable="false" :class="isActive('/podcast')" to="/podcast">博客</router-link>
+        <router-link draggable="false" :class="isActive('/community')" to="/community">社区</router-link>
+      </div>
+    </div>
+
   </div>
 </template>
 

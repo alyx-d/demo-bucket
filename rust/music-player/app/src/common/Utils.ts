@@ -5,7 +5,7 @@ export const first = <T>(arr: T[]) => {
     throw new Error("arr is empty");
 };
 
-export const last = <T>(arr: T[]) => {
+export const last = <T>(arr: T[]): T => {
     if (arr.length > 0) {
         return arr[arr.length - 1];
     }

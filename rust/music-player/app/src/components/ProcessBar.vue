@@ -3,17 +3,22 @@ import { computed, ref, watch } from 'vue';
 import { usePlayerStateStore } from '../store/PlayerStateStore';
 import { invoke } from '@tauri-apps/api/core';
 import Commands from '../common/Commands';
-import { storeGet } from '../common/Utils';
-import StorageKey from '../common/StorageKey';
 
 const playerStore = usePlayerStateStore();
 
 const pos = playerStore.playingPos;
-const totalDuration = playerStore.totalDuration;
+let totalDuration = playerStore.totalDuration;
+watch(() => playerStore.totalDuration, val => {
+    totalDuration = val;
+});
 
-const process = ref(Math.min(Math.max((pos / totalDuration) * 100, 0), 100));
+const calculatePercent = (p: number, t: number) => {
+    return Math.min(Math.max((p / t) * 100, 0), 100);
+};
+
+const process = ref(totalDuration > 0 ? calculatePercent(pos, totalDuration) : 0);
 watch(() => playerStore.playingPos, val => {
-    process.value = Math.min(Math.max((val / totalDuration) * 100, 0), 100);
+    process.value = calculatePercent(val, totalDuration);
 });
 
 const processVal = computed(() => {
@@ -25,14 +30,14 @@ const onTrackMouseDown = async (e: MouseEvent, el: HTMLElement) => {
     const ballEl = el.querySelector(".ball") as HTMLElement;
     const trackWidth = trackEl.offsetWidth;
     const offsetX = e.clientX - trackEl.getBoundingClientRect().left;
-    const percentage = Math.min(Math.max((offsetX / trackWidth) * 100, 0), 100);
+    const percentage = calculatePercent(offsetX, trackWidth);
     process.value = percentage;
     const pos = Math.round(percentage * totalDuration / 100);
     playerStore.setPlayingPos(pos);
     invoke(Commands.player_seek, { pos });
     const onTrackMouseMove = (e: MouseEvent) => {
         const offsetX = e.clientX - trackEl.getBoundingClientRect().left;
-        const percentage = Math.min(Math.max((offsetX / trackWidth) * 100, 0), 100);
+        const percentage = calculatePercent(offsetX, trackWidth);
         process.value = percentage;
         const pos = Math.round(percentage * totalDuration / 100);
         playerStore.setPlayingPos(pos);

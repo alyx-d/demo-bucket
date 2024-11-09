@@ -2,7 +2,7 @@
     --text-color: #aaa;
     --main-color: #f6142eda;
     --main-color-dark: #f6143e;
-    --bottom-bar-duration: 0.3s;
+    --bottom-bar-duration: 0.2s;
 }
 
 ::-webkit-scrollbar {

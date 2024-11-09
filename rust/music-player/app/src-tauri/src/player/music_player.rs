@@ -3,7 +3,7 @@ use rodio::{Decoder, OutputStream, Sink, Source};
 use std::fs::{read_dir, File};
 use std::io::BufReader;
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::ipc::{InvokeResponseBody, IpcResponse};
@@ -19,6 +19,7 @@ pub struct Player {
     _output_stream: OutputStream,
     controller: Arc<Mutex<Controller>>,
     is_running: Arc<AtomicBool>,
+    add_len: Arc<AtomicUsize>,
 }
 
 struct Controller {
@@ -84,6 +85,7 @@ impl Player {
             sink: Arc::new(sink),
             _output_stream,
             is_running: Arc::new(AtomicBool::new(false)),
+            add_len: Arc::new(AtomicUsize::new(0)),
             controller: Arc::new(Mutex::new(Controller {
                 play_list: vec![],
                 current_index: 0,
@@ -93,11 +95,9 @@ impl Player {
 
     pub fn add_source(&self, file_path: &str) {
         let mut controller = self.controller.lock().unwrap();
-        if controller
-            .play_list
-            .iter()
-            .any(|info| info.path == file_path)
-        {
+        if controller.play_list.iter().any(|info| {
+            return info.path == file_path;
+        }) {
             return;
         }
         if let Ok(file) = File::open(file_path) {
@@ -116,6 +116,7 @@ impl Player {
                 size,
                 mb: byte_to_mb(size),
             });
+            self.add_len.fetch_add(1, Ordering::SeqCst);
         } else {
             println!("{} file_path not exists", file_path);
         }
@@ -133,6 +134,9 @@ impl Player {
                 self.scan_dir(path.to_str().unwrap());
             }
         }
+    }
+    pub fn add_len(&self) -> usize {
+        self.add_len.load(Ordering::SeqCst)
     }
 
     pub fn is_running(&self) -> bool {
@@ -163,11 +167,17 @@ impl Player {
                         let source = Decoder::new(BufReader::new(file)).unwrap();
                         sink.append(source);
                         sink.play();
+                        if is_running.load(Ordering::SeqCst) {
+                            app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
+                        }
                         is_running.store(true, Ordering::SeqCst);
                     } else {
                         println!("file not exists {}", file_name);
+                        app_handle
+                            .emit(PlayerEvents::FileNoExists.as_str(), index)
+                            .unwrap();
+                        controller.play_list.remove(index);
                     }
-                    app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
                     index += 1;
                     controller.current_index = index % controller.play_list.len();
                 }

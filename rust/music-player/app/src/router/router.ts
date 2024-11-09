@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router"
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 const routes: Readonly<RouteRecordRaw[]> = [
     {
         path: "/",
-        component: () => import("../pages/Recommend.vue"),
+        component: () => import("../pages/LocalMusic.vue"),
     },
     {
         path: "/recommend",
@@ -21,7 +21,7 @@ const routes: Readonly<RouteRecordRaw[]> = [
         path: "/local-music",
         component: () => import("../pages/LocalMusic.vue"),
     },
-]
+];
 
 export const router = createRouter({
     history: createWebHistory(),
