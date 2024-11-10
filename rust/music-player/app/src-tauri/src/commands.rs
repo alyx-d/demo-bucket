@@ -22,12 +22,12 @@ pub fn get_default_dirs() -> Vec<String> {
 #[tauri::command]
 pub fn player_scan_dirs(player: State<Mutex<Player>>, dirs: Vec<String>) -> usize {
     let player = player.lock().unwrap();
-    println!("start scan");
+    log::debug!("start scan");
     player.set_add_len(0);
     for dir in dirs {
         player.scan_dir(dir.as_str());
     }
-    println!("scan done");
+    log::debug!("scan done");
     player.add_len()
 }
 

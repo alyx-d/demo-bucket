@@ -105,7 +105,7 @@ impl Player {
             return;
         }
         if let Ok(file) = File::open(file_path) {
-            println!("add source {}", file_path);
+            log::debug!("add source {}", file_path);
             let size = file.metadata().unwrap().len();
             let source = Decoder::new(BufReader::new(file)).unwrap();
             let tag = id3::Tag::read_from_path(file_path).unwrap_or(Tag::default());
@@ -135,7 +135,7 @@ impl Player {
             if path.is_file() {
                 if path.extension().unwrap() == "mp3" {
                     self.add_source(path.to_str().unwrap());
-                    println!("add source done");
+                    log::debug!("add source done");
                 }
             } else {
                 self.scan_dir(path.to_str().unwrap());

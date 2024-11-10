@@ -38,6 +38,7 @@ listen(PlayerEvents.Play, (event) => {
     playerStore.setPlaying(true, index);
     playerStore.setTotalDuration(durationToSecs(playerStore.playList[index].totalDuration));
     store.setTitle(playerStore.playList[index].title);
+    store.show();
 });
 
 listen(PlayerEvents.Pause, (event) => {
