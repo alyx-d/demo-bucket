@@ -1,37 +1,33 @@
 <script setup lang="ts">
-import { onActivated, ref, watch } from "vue";
+import { onActivated, ref, watchEffect } from "vue";
 import Dialog, { ExposeMethods } from "../components/Dialog.vue";
 import SelectLocalDir from "../components/SelectLocalDir.vue";
 import { invoke } from "@tauri-apps/api/core";
 import Commands from "../common/Commands.ts";
 import { listen } from "@tauri-apps/api/event";
 import PlayerEvents from "../common/PlayerEvents.ts";
-import { usePlayBottomStore } from "../store/PlayBottomStore.ts";
 import { doScanDirs, readPlayList, usePlayerStateStore } from "../store/PlayerStateStore.ts";
-import { durationToSecs, storeGet } from "../common/Utils.ts";
-import StorageKey from "../common/StorageKey.ts";
 import { OwnFileInfo, PlayerCtl } from "../types/Components.interface.ts";
 
 const scanTotal = ref(0);
 const scanShow = ref(false);
 const selectedItemIdx = ref(-1);
 
-const store = usePlayBottomStore();
 const playerStore = usePlayerStateStore();
 
-const playList = ref<OwnFileInfo[]>(playerStore.playList ?? []);
-watch(() => playerStore.playList, (val) => {
-  playList.value = val ?? [];
-});
+const playList = ref<OwnFileInfo[]>(playerStore.playList);
 
 const playerCtl = ref<PlayerCtl>({
   currentIndex: -1,
   isPlaying: playerStore.isPlaying,
-  isPause: false,
+  isPause: playerStore.isPause,
 });
-watch(() => playerStore.isPlaying, val => {
-  playerCtl.value.isPlaying = val;
-  playerCtl.value.isPause = !val;
+watchEffect(() => {
+  if (playList.value.length != playerStore.playList.length) {
+    playList.value = playerStore.playList;
+  }
+  playerCtl.value.isPlaying = playerStore.isPlaying;
+  playerCtl.value.isPause = playerStore.isPause;
 });
 
 const dialog = ref<ExposeMethods | null>(null);
@@ -50,33 +46,39 @@ const unDisplayScan = (num: number) => {
 };
 
 onActivated(async () => {
+  console.log("onActivated");
   if (playerStore.scanDirs) {
     const num = await doScanDirs(playerStore.scanDirs);
     unDisplayScan(num);
     if (num) {
       const list = await readPlayList();
       playerStore.setPlayList(list);
-      playList.value = list;
     }
   }
 });
 
-const play = async (index: number, originIndex: number) => {
+const onPlayClick = async (index: number, originIndex: number) => {
   if (playerCtl.value.isPause && index == playerCtl.value.currentIndex) {
-    playerCtl.value.isPlaying = true;
-    playerStore.setPlaying(true, originIndex, true);
     await invoke(Commands.player_resume);
   } else {
-    playerCtl.value.currentIndex = index;
     await invoke(Commands.player_play_index, { index: originIndex });
   }
 };
 
-const pause = async () => {
-  playerCtl.value.isPlaying = false;
-  playerCtl.value.isPause = true;
-  playerStore.setPlaying(false, -1);
+const onPauseClick = async () => {
   await invoke(Commands.player_pause);
+};
+
+const onDbClick = async (index: number, originIndex: number) => {
+  if (playerCtl.value.currentIndex != index) {
+    await invoke(Commands.player_play_index, { index: originIndex });
+  } else {
+    if (playerCtl.value.isPause) {
+      await invoke(Commands.player_resume);
+    } else {
+      await invoke(Commands.player_pause);
+    }
+  }
 };
 
 const isPlaying = (index: number) => {
@@ -93,14 +95,9 @@ const isPauseClass = (index: number): string => {
 
 listen(PlayerEvents.Play, (event) => {
   const index = event.payload as number;
-  playerCtl.value.isPlaying = true;
-  playerStore.setPlaying(true, index);
-  playerStore.setPlayingIndex(index);
-  playerStore.setTotalDuration(durationToSecs(playList.value[index].totalDuration));
   for (let idx in playList.value) {
     if (playList.value[idx].originIndex == index) {
       playerCtl.value.currentIndex = Number(idx);
-      store.setTitle(playList.value[idx].path);
       break;
     }
   }
@@ -139,15 +136,15 @@ const selectedClass = (index: number): string => {
         <div class="size">大小</div>
       </div>
       <div :class="`item ${selectedClass(index)}`" v-for="(item, index) in playList" :key="index"
-        @click="onItemClick(index)">
+        @click="onItemClick(index)" @dblclick="onDbClick(index, item.originIndex)">
         <div :class="`seq ${isPauseClass(index)}`">
           <span v-show="!isPlaying(index)" class="text">{{ (index + 1).toString().padStart(2, "0") }}</span>
           <img v-show="isPlaying(index)" class="text" src="/icons/playing.svg" alt="playing" />
           <img v-show="!isPlaying(index)" class="play" src="/icons/play_fill.svg" alt="play"
-            @click="play(index, item.originIndex)" />
-          <img v-show="isPlaying(index)" class="play" src="/icons/pause.svg" alt="play" @click="pause" />
+            @click="onPlayClick(index, item.originIndex)" />
+          <img v-show="isPlaying(index)" class="play" src="/icons/pause.svg" alt="play" @click="onPauseClick" />
         </div>
-        <div :class="`title ${isPlayingClass(index)}`">{{ item.path }}</div>
+        <div :class="`title ${isPlayingClass(index)}`">{{ item.title }}</div>
         <div class="album">{{ item.album }}</div>
         <div class="total-duration">{{ item.totalDuration }}</div>
         <div class="size">{{ item.mb }}</div>

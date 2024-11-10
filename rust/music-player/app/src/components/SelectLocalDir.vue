@@ -1,26 +1,28 @@
 <script setup lang="ts">
-import {ref} from "vue";
-import {open} from "@tauri-apps/plugin-dialog";
+import { reactive } from "vue";
+import { open } from "@tauri-apps/plugin-dialog";
+import { doScanDirs, usePlayerStateStore } from "../store/PlayerStateStore";
+import { storeGet, storeSet } from "../common/Utils";
+import StorageKey from "../common/StorageKey";
 
-export interface FormData {
-  my_music: boolean;
-  download: boolean;
-}
+const playerStore = usePlayerStateStore();
+const userSelectDirs = reactive<string[]>(playerStore.scanDirs.slice(2));
+const userSelected = reactive<boolean[]>(
+  storeGet<boolean[]>(StorageKey.user_select_dirs) ?? [true, true, ...Array.from({ length: userSelectDirs.length }, () => false)],
+);
 
-const formData = ref<FormData>({
-  my_music: true,
-  download: true,
-});
 
 const addDir = async () => {
-  console.log("add dir");
-  const path = await open({directory: true});
+  const path = await open({
+    directory: true, canCreateDirectories: true,
+    title: "选择添加目录",
+  });
   if (path) {
-    console.log("path", path);
+
   }
 };
 
-const confirm = () => {
+const confirm = (parent: any) => {
 
 };
 </script>
@@ -37,19 +39,22 @@ const confirm = () => {
       <div class="form">
         <form>
           <div class="item">
-            <input type="checkbox" id="my-music" name="my-music" v-model="formData.my_music"/>
+            <input type="checkbox" id="my-music" name="my-music" v-model="userSelected[0]" />
             <label for="my-music">我的音乐</label>
           </div>
           <div class="item">
-            <input type="checkbox" id="download" name="download" v-model="formData.download"/>
+            <input type="checkbox" id="download" name="download" v-model="userSelected[1]" />
             <label for="download">下载</label>
           </div>
-
+          <div class="item" v-for="(item, index) in userSelectDirs" :key="index">
+            <input type="checkbox" :id="`usd-${index}`" :name="`usd-${index}`" v-model="userSelected[index + 2]" />
+            <label :for="`usd-${index}`">{{ item }}</label>
+          </div>
         </form>
       </div>
       <div class="button-group">
         <button @click="addDir" class="button add-dir">添加文件夹</button>
-        <button @click="confirm" class="button confirm">确认</button>
+        <button @click="confirm($parent)" class="button confirm">确认</button>
       </div>
     </div>
   </div>
@@ -76,6 +81,8 @@ const confirm = () => {
   }
 
   .form {
+    overflow-y: auto;
+
     .item {
       margin: 20px 0;
       font-size: 13px;
@@ -92,14 +99,14 @@ const confirm = () => {
         cursor: pointer;
         display: none;
 
-        & + label {
+        &+label {
           cursor: pointer;
           position: relative;
           padding-left: 25px;
 
         }
 
-        & + label::before {
+        &+label::before {
           content: "";
           background-color: white;
           position: absolute;
@@ -111,11 +118,11 @@ const confirm = () => {
           border-radius: 4px;
         }
 
-        &:not(:checked) + label:hover::before {
+        &:not(:checked)+label:hover::before {
           border-color: #999;
         }
 
-        &:checked + label::before {
+        &:checked+label::before {
           content: "\2714";
           background-color: #f6142e;
           display: flex;

@@ -5,6 +5,7 @@ import StorageKey from "../common/StorageKey";
 import { invoke } from "@tauri-apps/api/core";
 import Commands from "../common/Commands";
 import { FileInfo, OwnFileInfo } from "../types/Components.interface";
+import { useUserSelectDirStore } from "./UserSelectDirStore";
 
 const getDefaultDirs = async (): Promise<string[]> => {
     const default_dirs = await invoke<string>(Commands.get_default_dirs);
@@ -22,7 +23,10 @@ export const readPlayList = async (): Promise<OwnFileInfo[]> => {
     const list = await invoke<FileInfo[]>(Commands.player_list);
     list.forEach((item, index) => {
         /// only save file name without extension
-        item.path = last(item.path.split("\\")).replace(".mp3", "");
+        const fileName = last(item.path.split("\\")).replace(".mp3", "");
+        if (item.title == "未知歌曲") {
+            item.title = fileName;
+        }
         (item as OwnFileInfo).originIndex = index;
     });
     return list as OwnFileInfo[];
@@ -30,7 +34,11 @@ export const readPlayList = async (): Promise<OwnFileInfo[]> => {
 
 export const usePlayerStateStore = defineStore("player-state", () => {
     const isPlaying = ref(false);
-    const playingIndex = ref<number>(-1);
+    const isPause = ref(false);
+    const playingIndex = ref<number>(
+        storeGet<number>(StorageKey.playing_index) ?? -1,
+    );
+
     const scanDirs = ref<string[]>(
         storeGet<string[]>(StorageKey.scan_dirs) ?? [],
     );
@@ -40,17 +48,33 @@ export const usePlayerStateStore = defineStore("player-state", () => {
     const totalDuration = ref(0);
     const secTimer = ref<number | null>(null);
 
-    if (!scanDirs.value) {
+    const scanAndList = (dirs: string[]) => {
+        const userSelectDirStore = useUserSelectDirStore();
+        userSelectDirStore.setUserSelectDirs(dirs.map((dir, _index) => {
+            return {
+                path: dir,
+                checked: true,
+            };
+        }));
+        doScanDirs(dirs).then((_result) => {
+            if (playList.value.length == 0) {
+                readPlayList().then((list) => {
+                    playList.value = list as OwnFileInfo[];
+                    console.log("read play list", playList.value);
+                });
+            }
+        });
+    };
+
+    if (scanDirs.value.length == 0) {
         getDefaultDirs().then((dirs) => {
             scanDirs.value = dirs;
-            doScanDirs(dirs).then((_result) => {
-                if (!playList.value) {
-                    readPlayList().then((list) => {
-                        playList.value = list as OwnFileInfo[];
-                    });
-                }
-            });
+            console.log("scanAndList", dirs);
+            scanAndList(dirs);
         });
+    } else {
+        console.log("has dirs");
+        scanAndList(scanDirs.value);
     }
 
     const setPlaying = (
@@ -86,8 +110,17 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         }
     };
 
+    const isPlayCompleted = () => {
+        return playingPos.value >= totalDuration.value;
+    };
+
+    const setPause = (flag: boolean) => {
+        isPause.value = flag;
+    };
+
     const setPlayingIndex = (index: number) => {
         playingIndex.value = index;
+        storeSet(StorageKey.playing_index, index);
     };
 
     const setPlayList = (list: OwnFileInfo[]) => {
@@ -110,6 +143,8 @@ export const usePlayerStateStore = defineStore("player-state", () => {
     return {
         isPlaying,
         setPlaying,
+        isPause,
+        setPause,
         playingIndex,
         setPlayingIndex,
         scanDirs,
@@ -120,5 +155,6 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         totalDuration,
         setPlayingPos,
         setTotalDuration,
+        isPlayCompleted,
     };
 });

@@ -4,6 +4,7 @@ use std::fs::{read_dir, File};
 use std::io::BufReader;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::ipc::{InvokeResponseBody, IpcResponse};
@@ -20,6 +21,7 @@ pub struct Player {
     controller: Arc<Mutex<Controller>>,
     is_running: Arc<AtomicBool>,
     add_len: Arc<AtomicUsize>,
+    signal: Arc<Mutex<Option<Sender<usize>>>>,
 }
 
 struct Controller {
@@ -40,6 +42,7 @@ pub struct FileInfo {
 
 impl IpcResponse for FileInfo {
     fn body(self) -> tauri::Result<tauri::ipc::InvokeResponseBody> {
+        // remove control char
         let re = regex::Regex::new(r"[\u0000-\u001F]").unwrap();
         Ok(tauri::ipc::InvokeResponseBody::Json(format!(
             "{{\"path\":\"{}\",\"totalDuration\":\"{}\",
@@ -90,6 +93,7 @@ impl Player {
                 play_list: vec![],
                 current_index: 0,
             })),
+            signal: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -101,6 +105,7 @@ impl Player {
             return;
         }
         if let Ok(file) = File::open(file_path) {
+            println!("add source {}", file_path);
             let size = file.metadata().unwrap().len();
             let source = Decoder::new(BufReader::new(file)).unwrap();
             let tag = id3::Tag::read_from_path(file_path).unwrap_or(Tag::default());
@@ -129,6 +134,7 @@ impl Player {
             if path.is_file() {
                 if path.extension().unwrap() == "mp3" {
                     self.add_source(path.to_str().unwrap());
+                    println!("add source done");
                 }
             } else {
                 self.scan_dir(path.to_str().unwrap());
@@ -153,29 +159,40 @@ impl Player {
         let controller = self.controller.clone();
         let app_handle = self.app.clone();
         let is_running = self.is_running.clone();
+        let signal = self.signal.clone();
         std::thread::spawn(move || {
+            is_running.store(true, Ordering::SeqCst);
+            let (sender, receiver) = channel::<usize>();
+            {
+                signal.lock().unwrap().replace(sender.clone());
+            }
             loop {
+                let mut index;
+                {
+                    println!("wait signal");
+                    index = receiver.recv().unwrap();
+                    println!("got signal {}", index);
+                }
                 {
                     let mut controller = controller.lock().unwrap();
                     if controller.play_list.is_empty() {
-                        break;
+                        println!("play_list is empty");
+                        continue;
                     }
-                    let mut index = controller.current_index;
+                    index %= controller.play_list.len();
+                    controller.current_index = index;
                     let file = File::open(controller.play_list[index].path.as_str());
                     let file_name = Path::new(&controller.play_list[index].path)
                         .file_name()
                         .unwrap()
                         .to_str()
                         .unwrap();
-                    println!("file_name: {}", file_name);
+                    println!("is playing: {}", file_name);
                     if let Ok(file) = file {
                         let source = Decoder::new(BufReader::new(file)).unwrap();
                         sink.append(source);
                         sink.play();
-                        if is_running.load(Ordering::SeqCst) {
-                            app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
-                        }
-                        is_running.store(true, Ordering::SeqCst);
+                        app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
                     } else {
                         println!("file not exists {}", file_name);
                         app_handle
@@ -183,19 +200,23 @@ impl Player {
                             .unwrap();
                         controller.play_list.remove(index);
                     }
-                    index += 1;
-                    controller.current_index = index % controller.play_list.len();
                 }
                 sink.sleep_until_end();
+                app_handle
+                    .emit(PlayerEvents::PlayEnd.as_str(), index)
+                    .unwrap();
             }
-            is_running.store(false, Ordering::SeqCst);
         });
     }
 
     pub fn play_index(&self, index: usize) {
-        let mut controller = self.controller.lock().unwrap();
-        controller.current_index = index;
-        self.stop();
+        println!("play_index {}", index);
+        if !self.sink.empty() {
+            self.stop();
+        }
+        let signal = self.signal.lock().unwrap();
+        signal.clone().unwrap().send(index).unwrap();
+        println!("send signal {}", index);
     }
 
     pub fn seek(&self, pos: Duration) {
@@ -215,25 +236,34 @@ impl Player {
     }
 
     pub fn pause(&self) {
+        let controller = self.controller.lock().unwrap();
+        let index = controller.current_index;
         self.sink.pause();
+        self.app.emit(PlayerEvents::Pause.as_str(), index).unwrap();
+        println!("player pause");
     }
 
     pub fn resume(&self) {
         self.sink.play();
+        let controller = self.controller.lock().unwrap();
+        self.app
+            .emit(PlayerEvents::Resume.as_str(), controller.current_index)
+            .unwrap();
+        println!("player resume");
     }
 
     pub fn next(&self) {
-        self.stop();
+        let controller = self.controller.lock().unwrap();
+        self.play_index(controller.current_index + 1);
     }
 
     pub fn prev(&self) {
         let mut controller = self.controller.lock().unwrap();
         controller.current_index = match controller.current_index {
-            0 => controller.play_list.len() - 2,
-            1 => controller.play_list.len() - 1,
-            _ => controller.current_index - 2,
+            0 => controller.play_list.len() - 1,
+            _ => controller.current_index - 1,
         };
-        self.stop();
+        self.play_index(controller.current_index);
     }
 
     pub fn set_volume(&self, volume: f32) {
@@ -255,7 +285,7 @@ impl Player {
     pub fn list(&self) -> Vec<FileInfo> {
         let controller = self.controller.lock().unwrap();
         let result = controller.play_list.iter().cloned().collect();
-        // println!("list: {:?}", result);
+        println!("list: {:?}", result);
         result
     }
 }

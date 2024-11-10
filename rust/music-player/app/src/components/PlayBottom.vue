@@ -3,9 +3,11 @@ import { computed } from 'vue';
 import { usePlayBottomStore } from '../store/PlayBottomStore';
 import { usePlayerStateStore } from '../store/PlayerStateStore';
 import ProcessBar from './ProcessBar.vue';
-import { secsToDuration } from '../common/Utils';
+import { durationToSecs, secsToDuration } from '../common/Utils';
 import { invoke } from '@tauri-apps/api/core';
 import Commands from '../common/Commands';
+import { listen } from '@tauri-apps/api/event';
+import PlayerEvents from '../common/PlayerEvents';
 
 const store = usePlayBottomStore();
 const playerStore = usePlayerStateStore();
@@ -20,7 +22,6 @@ const onPreviousClick = async () => {
 
 const onPlayOrPauseClick = async () => {
     if (playerStore.isPlaying) {
-        playerStore.setPlaying(false, -1);
         invoke(Commands.player_pause);
     } else {
         playerStore.setPlaying(true, playerStore.playingIndex, true);
@@ -31,6 +32,35 @@ const onPlayOrPauseClick = async () => {
 const onNextClick = async () => {
     invoke(Commands.player_next);
 };
+
+listen(PlayerEvents.Play, (event) => {
+    const index = event.payload as number;
+    playerStore.setPlaying(true, index);
+    playerStore.setTotalDuration(durationToSecs(playerStore.playList[index].totalDuration));
+    store.setTitle(playerStore.playList[index].title);
+});
+
+listen(PlayerEvents.Pause, (event) => {
+    const index = event.payload as number;
+    playerStore.setPlaying(false, index, true);
+    playerStore.setPause(true);
+});
+
+listen(PlayerEvents.Resume, (event) => {
+    const index = event.payload as number;
+    playerStore.setPlaying(true, index);
+    playerStore.setPause(false);
+});
+
+listen(PlayerEvents.PlayEnd, (event) => {
+    let index = event.payload as number;
+    // play next default index+1
+    index = Math.max(index + 1, 0);
+    // play completed next not user tragger
+    if (playerStore.isPlayCompleted()) {
+        invoke(Commands.player_play_index, { index });
+    }
+});
 </script>
 
 <template>

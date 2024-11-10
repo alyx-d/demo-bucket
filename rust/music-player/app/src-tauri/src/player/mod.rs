@@ -13,7 +13,9 @@ pub fn default_dirs() -> Vec<String> {
 }
 
 pub fn init_player(app: AppHandle) -> Player {
-    Player::new(app)
+    let player = Player::new(app);
+    player.play();
+    player
 }
 
 pub fn secs_to_string(secs: u64) -> String {

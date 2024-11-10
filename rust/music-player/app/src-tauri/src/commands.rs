@@ -1,6 +1,6 @@
 use std::{sync::Mutex, time::Duration};
 
-use tauri::{ipc::IpcResponse, State};
+use tauri::State;
 
 use crate::player::{default_dirs, music_player::FileInfoVec, Player};
 
@@ -15,22 +15,19 @@ pub fn button2() -> String {
 }
 
 #[tauri::command]
-pub fn get_default_dirs() -> String {
-    default_dirs().join(",")
+pub fn get_default_dirs() -> Vec<String> {
+    default_dirs()
 }
 
 #[tauri::command]
 pub fn player_scan_dirs(player: State<Mutex<Player>>, dirs: Vec<String>) -> usize {
     let player = player.lock().unwrap();
+    println!("start scan");
     player.set_add_len(0);
     for dir in dirs {
         player.scan_dir(dir.as_str());
     }
-    if !player.is_running() {
-        player.play();
-        while !player.is_running() {}
-        player.pause();
-    }
+    println!("scan done");
     player.add_len()
 }
 
@@ -67,10 +64,6 @@ pub fn player_set_speed(player: State<Mutex<Player>>, speed: f32) {
 #[tauri::command]
 pub fn player_list(player: State<Mutex<Player>>) -> FileInfoVec {
     let result = FileInfoVec(player.lock().unwrap().list());
-    let clone = result.clone();
-    if let tauri::ipc::InvokeResponseBody::Json(_json) = clone.body().unwrap() {
-        // println!("json: {:?}", _json);
-    }
     result
 }
 

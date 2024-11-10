@@ -17,3 +17,8 @@ export interface PlayerCtl {
     isPlaying: boolean;
     isPause: boolean;
 }
+
+export interface UserSelectDirItem {
+    path: string;
+    checked: boolean;
+}
