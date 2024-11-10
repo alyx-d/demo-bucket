@@ -28,6 +28,12 @@ pub fn secs_to_string(secs: u64) -> String {
     return result;
 }
 
+pub fn string_to_secs(time: String) -> u32 {
+    let arr: Vec<&str> = time.split(":").collect();
+    let min = arr[0].parse::<u32>().unwrap();
+    let sec = arr[1].parse::<u32>().unwrap();
+    min * 60 + sec
+}
 pub fn byte_to_mb(byte: u64) -> String {
     format!("{:.2}MB", byte as f64 / 1024.0 / 1024.0)
 }

@@ -114,6 +114,7 @@ impl Player {
             let album = tag.album().unwrap_or("未知专辑");
             controller.play_list.push(FileInfo {
                 path: file_path.to_string(),
+                // FIXME: total_duration 读取的总时长不准确
                 total_duration: secs_to_string(source.total_duration().unwrap().as_secs()),
                 title: title.to_string(),
                 artist: artist.to_string(),
@@ -202,6 +203,8 @@ impl Player {
                     }
                 }
                 sink.sleep_until_end();
+                println!("play sec pos {}", sink.get_pos().as_secs());
+                println!("play end");
                 app_handle
                     .emit(PlayerEvents::PlayEnd.as_str(), index)
                     .unwrap();
@@ -285,7 +288,7 @@ impl Player {
     pub fn list(&self) -> Vec<FileInfo> {
         let controller = self.controller.lock().unwrap();
         let result = controller.play_list.iter().cloned().collect();
-        println!("list: {:?}", result);
+        // println!("list: {:?}", result);
         result
     }
 }

@@ -52,15 +52,6 @@ listen(PlayerEvents.Resume, (event) => {
     playerStore.setPause(false);
 });
 
-listen(PlayerEvents.PlayEnd, (event) => {
-    let index = event.payload as number;
-    // play next default index+1
-    index = Math.max(index + 1, 0);
-    // play completed next not user tragger
-    if (playerStore.isPlayCompleted()) {
-        invoke(Commands.player_play_index, { index });
-    }
-});
 </script>
 
 <template>

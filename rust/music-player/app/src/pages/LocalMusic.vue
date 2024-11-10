@@ -23,9 +23,7 @@ const playerCtl = ref<PlayerCtl>({
   isPause: playerStore.isPause,
 });
 watchEffect(() => {
-  if (playList.value.length != playerStore.playList.length) {
-    playList.value = playerStore.playList;
-  }
+  playList.value = playerStore.playList;
   playerCtl.value.isPlaying = playerStore.isPlaying;
   playerCtl.value.isPause = playerStore.isPause;
 });

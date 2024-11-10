@@ -102,6 +102,7 @@ export const usePlayerStateStore = defineStore("player-state", () => {
                     clearInterval(timer);
                     secTimer.value = null;
                     playingPos.value = 0;
+                    invoke(Commands.player_play_index, { index: index + 1 });
                 } else {
                     playingPos.value += 1;
                 }
