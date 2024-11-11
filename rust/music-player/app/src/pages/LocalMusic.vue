@@ -245,8 +245,8 @@ const selectedClass = (index: number): string => {
         .play,
         .text {
           position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
+          inset: 0;
+          margin: auto;
           width: 15px;
           height: 15px;
           transition: opacity 10ms ease-in-out;
@@ -265,8 +265,14 @@ const selectedClass = (index: number): string => {
       }
 
       .title {
-        flex: 1.6;
+        flex: 1.5;
       }
+
+      .title,
+      .album {
+        margin-right: 20px;
+      }
+
 
       .album {
         flex: 1;
