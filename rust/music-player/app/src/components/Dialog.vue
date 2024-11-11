@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import { ref } from "vue";
 
 const showState = ref(false);
 
@@ -26,7 +26,7 @@ export interface ExposeMethods {
     <div class="dialog" v-if="showState">
       <div class="modal">
         <div class="slot">
-          <img class="icon_close" alt="" src="/icons/icon_close.svg" @click="close"/>
+          <img class="icon_close" alt="" src="/icons/icon_close.svg" @click="close" />
           <slot>
             <div class="default">
               <span>默认slot</span>
@@ -56,7 +56,7 @@ export interface ExposeMethods {
     z-index: 101;
     padding: 40px;
     position: relative;
-    background-color: #fff;
+    background-color: var(--dialog-bg-color);
     border-radius: 10px;
 
     .icon_close {

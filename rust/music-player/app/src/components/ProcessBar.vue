@@ -81,7 +81,7 @@ const onTrackMouseDown = async (e: MouseEvent, el: HTMLElement) => {
         height: 5px;
         width: 92%;
         border-radius: 5px;
-        background-color: #ccc;
+        background-color: var(--process-bar-bg-color);
         position: relative;
 
         .process {

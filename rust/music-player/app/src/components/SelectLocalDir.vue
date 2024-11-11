@@ -124,18 +124,22 @@ const confirm = (parent: any) => {
 
         &+label::before {
           content: "";
-          background-color: white;
+          background-color: var(--dialog-bg-color);
           position: absolute;
           left: 0;
           top: 0;
           width: 15px;
           height: 15px;
-          border: 1px solid #ccc;
+          border: 1px solid var(--dialog-bg-color);
           border-radius: 4px;
         }
 
+        &:not(:checked)+label::before {
+          border-color: var(--checkbox-border-color);
+        }
+
         &:not(:checked)+label:hover::before {
-          border-color: #999;
+          border-color: var(--checkbox-hover-border-color);
         }
 
         &:checked+label::before {
@@ -144,7 +148,6 @@ const confirm = (parent: any) => {
           display: flex;
           justify-content: center;
           align-items: center;
-          color: white;
         }
       }
 
@@ -159,8 +162,8 @@ const confirm = (parent: any) => {
       height: 40px;
       border-radius: 20px;
       font-size: 14px;
-      background-color: #fff;
-      border: 1px solid #ccc;
+      background-color: var(--dialog-bg-color);
+      border: 1px solid #ddd;
 
       &:not(:last-child) {
         margin-right: 10px;
@@ -168,7 +171,6 @@ const confirm = (parent: any) => {
 
       &.confirm {
         background-color: var(--main-color);
-        color: white;
 
         &:hover {
           background-color: var(--main-color-dark);
@@ -177,8 +179,8 @@ const confirm = (parent: any) => {
 
       &.add-dir {
         &:hover {
-          background-color: #eeeeee60;
-          border-color: #999;
+          background-color: var(--btn-hover-bg-color);
+          border-color: #ddd;
         }
       }
 

@@ -54,7 +54,7 @@ const scanDirs = async () => {
     // 监听文件变化 刷新列表
     unWatchFn = await fsWatch(playerStore.scanDirs, async event => {
       const type = event.type as object;
-      if ("create" in type || "modify" in type) {
+      if ("create" in type || "remove" in type) {
         const num = await doScanDirs(playerStore.scanDirs);
         unDisplayScan(num);
         const list = await readPlayList();
@@ -186,7 +186,7 @@ const selectedClass = (index: number): string => {
         margin-left: 10px;
         height: max-content;
         font-size: 12px;
-        color: #ccc;
+        color: #aaa;
       }
     }
 
@@ -212,7 +212,7 @@ const selectedClass = (index: number): string => {
       font-size: 13px;
 
       &:not(.head):hover {
-        background-color: #fff;
+        background-color: var(--list-hover-bg-color);
         border-radius: 10px;
 
         .play {
@@ -225,7 +225,7 @@ const selectedClass = (index: number): string => {
       }
 
       &.selected {
-        background-color: #fff;
+        background-color: var(--list-hover-bg-color);
         border-radius: 10px;
 
         .text {
@@ -278,7 +278,7 @@ const selectedClass = (index: number): string => {
   }
 
   .playing {
-    color: red;
+    color: var(--playing-text-color);
   }
 
   .pause {

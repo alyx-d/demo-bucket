@@ -43,7 +43,7 @@ const isActive = (path: string): string => {
 .side-menu {
   width: 200px;
   min-width: 200px;
-  background-color: #F0F3F6;
+  background-color: var(--side-menu-bg-color);
 
   .wrapper {
     width: 100%;
@@ -78,7 +78,7 @@ const isActive = (path: string): string => {
       }
 
       &:hover {
-        background-color: #eee;
+        background-color: var(--side-menu-hover-color);
       }
 
       &.active {

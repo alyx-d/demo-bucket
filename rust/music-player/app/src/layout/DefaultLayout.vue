@@ -52,14 +52,14 @@ watch(() => store.playBottonShow, (value) => {
 
     .content-wrapper {
       flex: 1;
-      background-color: #F7F9FC;
+      background-color: var(--content-bg-color);
     }
   }
 
   .play-buttom {
     width: 100%;
     height: 75px;
-    background-color: #FAFAFA;
+    background-color: var(--bottom-bar-bg-color);
     position: absolute;
     bottom: 0;
   }
