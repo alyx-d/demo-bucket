@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onActivated, ref, watchEffect } from "vue";
+import { onActivated, ref, watch, watchEffect } from "vue";
 import Dialog, { ExposeMethods } from "../components/Dialog.vue";
 import SelectLocalDir from "../components/SelectLocalDir.vue";
 import { invoke } from "@tauri-apps/api/core";
@@ -8,6 +8,7 @@ import { listen } from "@tauri-apps/api/event";
 import PlayerEvents from "../common/PlayerEvents.ts";
 import { doScanDirs, readPlayList, usePlayerStateStore } from "../store/PlayerStateStore.ts";
 import { OwnFileInfo, PlayerCtl } from "../types/Components.interface.ts";
+import { watch as fsWatch } from "@tauri-apps/plugin-fs";
 
 const scanTotal = ref(0);
 const scanShow = ref(false);
@@ -30,9 +31,7 @@ watchEffect(() => {
 
 const dialog = ref<ExposeMethods | null>(null);
 const openDialog = () => {
-  if (dialog.value) {
-    dialog.value.open();
-  }
+  dialog.value?.open();
 };
 
 const unDisplayScan = (num: number) => {
@@ -43,16 +42,34 @@ const unDisplayScan = (num: number) => {
   }, 1500);
 };
 
-onActivated(async () => {
-  console.log("onActivated");
+let unWatchFn: (() => void) | null = null;
+
+const scanDirs = async () => {
   if (playerStore.scanDirs) {
     const num = await doScanDirs(playerStore.scanDirs);
     unDisplayScan(num);
-    if (num) {
-      const list = await readPlayList();
-      playerStore.setPlayList(list);
-    }
+    const list = await readPlayList();
+    playerStore.setPlayList(list);
+    unWatchFn?.call(null);
+    // 监听文件变化 刷新列表
+    unWatchFn = await fsWatch(playerStore.scanDirs, async event => {
+      const type = event.type as object;
+      if ("create" in type || "modify" in type) {
+        const num = await doScanDirs(playerStore.scanDirs);
+        unDisplayScan(num);
+        const list = await readPlayList();
+        playerStore.setPlayList(list);
+      }
+    }, { recursive: true });
   }
+};
+
+watch(() => playerStore.scanDirs, _ => {
+  scanDirs();
+});
+
+onActivated(async () => {
+  scanDirs();
 });
 
 const onPlayClick = async (index: number, originIndex: number) => {

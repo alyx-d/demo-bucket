@@ -21,11 +21,7 @@ pub fn init_player(app: AppHandle) -> Player {
 pub fn secs_to_string(secs: u64) -> String {
     let min = secs / 60;
     let sec = secs % 60;
-    let result = match min {
-        _ if min > 0 => format!("{:02}:{:02}", min, sec),
-        _ => format!("{:02}", sec),
-    };
-    return result;
+    format!("{:02}:{:02}", min, sec)
 }
 
 pub fn string_to_secs(time: String) -> u32 {
@@ -36,4 +32,17 @@ pub fn string_to_secs(time: String) -> u32 {
 }
 pub fn byte_to_mb(byte: u64) -> String {
     format!("{:.2}MB", byte as f64 / 1024.0 / 1024.0)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    #[test]
+    fn test_secs_to_string() {
+        assert_eq!(secs_to_string(0), "00:00");
+        assert_eq!(secs_to_string(60), "01:00");
+        assert_eq!(secs_to_string(120), "02:00");
+        assert_eq!(secs_to_string(3600), "60:00");
+    }
 }

@@ -11,13 +11,18 @@
     "dialog:default",
     "fs:default",
     {
-      "identifier": "fs:allow-open",
-      "allow": ["*/**"]
+      "identifier": "fs:allow-watch",
+      "allow": [
+        "*/**"
+      ]
     },
     {
       "identifier": "fs:allow-fstat",
-      "allow": ["*/**"]
+      "allow": [
+        "*/**"
+      ]
     },
-    "log:default"
+    "log:default",
+    "fs:default"
   ]
 }

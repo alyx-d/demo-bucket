@@ -124,7 +124,7 @@ impl Player {
             });
             self.add_len.fetch_add(1, Ordering::SeqCst);
         } else {
-            println!("{} file_path not exists", file_path);
+            log::debug!("{} file_path not exists", file_path);
         }
     }
 
@@ -133,7 +133,7 @@ impl Player {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.is_file() {
-                if path.extension().unwrap() == "mp3" {
+                if path.extension().unwrap_or_default() == "mp3" {
                     self.add_source(path.to_str().unwrap());
                     log::debug!("add source done");
                 }
@@ -143,8 +143,12 @@ impl Player {
         }
     }
 
-    pub fn set_add_len(&self, len: usize) {
-        self.add_len.store(len, Ordering::SeqCst);
+    pub fn clear_add_len(&self) {
+        self.add_len.store(0, Ordering::SeqCst);
+    }
+
+    pub fn clear_play_list(&self) {
+        self.controller.lock().unwrap().play_list.clear();
     }
 
     pub fn add_len(&self) -> usize {
@@ -170,14 +174,14 @@ impl Player {
             loop {
                 let mut index;
                 {
-                    println!("wait signal");
+                    log::debug!("wait signal");
                     index = receiver.recv().unwrap();
-                    println!("got signal {}", index);
+                    log::debug!("got signal {}", index);
                 }
                 {
                     let mut controller = controller.lock().unwrap();
                     if controller.play_list.is_empty() {
-                        println!("play_list is empty");
+                        log::debug!("play_list is empty");
                         continue;
                     }
                     index %= controller.play_list.len();
@@ -188,14 +192,14 @@ impl Player {
                         .unwrap()
                         .to_str()
                         .unwrap();
-                    println!("is playing: {}", file_name);
+                    log::debug!("is playing: {}", file_name);
                     if let Ok(file) = file {
                         let source = Decoder::new(BufReader::new(file)).unwrap();
                         sink.append(source);
                         sink.play();
                         app_handle.emit(PlayerEvents::Play.as_str(), index).unwrap();
                     } else {
-                        println!("file not exists {}", file_name);
+                        log::debug!("file not exists {}", file_name);
                         app_handle
                             .emit(PlayerEvents::FileNoExists.as_str(), index)
                             .unwrap();
@@ -203,8 +207,8 @@ impl Player {
                     }
                 }
                 sink.sleep_until_end();
-                println!("play sec pos {}", sink.get_pos().as_secs());
-                println!("play end");
+                log::debug!("play sec pos {}", sink.get_pos().as_secs());
+                log::debug!("play end");
                 app_handle
                     .emit(PlayerEvents::PlayEnd.as_str(), index)
                     .unwrap();
@@ -213,13 +217,13 @@ impl Player {
     }
 
     pub fn play_index(&self, index: usize) {
-        println!("play_index {}", index);
+        log::debug!("play_index {}", index);
         if !self.sink.empty() {
             self.stop();
         }
         let signal = self.signal.lock().unwrap();
         signal.clone().unwrap().send(index).unwrap();
-        println!("send signal {}", index);
+        log::debug!("send signal {}", index);
     }
 
     pub fn seek(&self, pos: Duration) {
@@ -243,7 +247,7 @@ impl Player {
         let index = controller.current_index;
         self.sink.pause();
         self.app.emit(PlayerEvents::Pause.as_str(), index).unwrap();
-        println!("player pause");
+        log::debug!("player pause");
     }
 
     pub fn resume(&self) {
@@ -252,7 +256,7 @@ impl Player {
         self.app
             .emit(PlayerEvents::Resume.as_str(), controller.current_index)
             .unwrap();
-        println!("player resume");
+        log::debug!("player resume");
     }
 
     pub fn next(&self) {
@@ -288,7 +292,7 @@ impl Player {
     pub fn list(&self) -> Vec<FileInfo> {
         let controller = self.controller.lock().unwrap();
         let result = controller.play_list.iter().cloned().collect();
-        // println!("list: {:?}", result);
+        // log::debug!("list: {:?}", result);
         result
     }
 }

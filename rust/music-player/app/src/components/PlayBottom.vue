@@ -20,6 +20,7 @@ const onPreviousClick = async () => {
     invoke(Commands.player_prev);
 };
 
+
 const onPlayOrPauseClick = async () => {
     if (playerStore.isPlaying) {
         invoke(Commands.player_pause);
@@ -49,7 +50,7 @@ listen(PlayerEvents.Pause, (event) => {
 
 listen(PlayerEvents.Resume, (event) => {
     const index = event.payload as number;
-    playerStore.setPlaying(true, index);
+    playerStore.setPlaying(true, index, true);
     playerStore.setPause(false);
 });
 

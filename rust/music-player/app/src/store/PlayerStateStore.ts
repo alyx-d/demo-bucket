@@ -8,10 +8,9 @@ import { FileInfo, OwnFileInfo } from "../types/Components.interface";
 import { useUserSelectDirStore } from "./UserSelectDirStore";
 
 const getDefaultDirs = async (): Promise<string[]> => {
-    const default_dirs = await invoke<string>(Commands.get_default_dirs);
-    const dirs = default_dirs.split(",");
-    storeSet(StorageKey.scan_dirs, dirs);
-    return dirs;
+    const default_dirs = await invoke<string[]>(Commands.get_default_dirs);
+    storeSet(StorageKey.scan_dirs, default_dirs);
+    return default_dirs;
 };
 
 export const doScanDirs = async (dirs: string[]): Promise<number> => {

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import { ref, watch } from "vue";
 import { open } from "@tauri-apps/plugin-dialog";
-import { doScanDirs, usePlayerStateStore } from "../store/PlayerStateStore";
-import { storeGet, storeSet } from "../common/Utils";
-import StorageKey from "../common/StorageKey";
+import { usePlayerStateStore } from "../store/PlayerStateStore";
+import { UserSelectDirItem } from "../types/Components.interface";
+import { useUserSelectDirStore } from "../store/UserSelectDirStore";
 
 const playerStore = usePlayerStateStore();
-const userSelectDirs = reactive<string[]>(playerStore.scanDirs.slice(2));
-const userSelected = reactive<boolean[]>(
-  storeGet<boolean[]>(StorageKey.user_select_dirs) ?? [true, true, ...Array.from({ length: userSelectDirs.length }, () => false)],
-);
+const userSelectDirStore = useUserSelectDirStore();
+const userSelectDirs = ref<UserSelectDirItem[]>(userSelectDirStore.userSelectDirs);
+
+watch(() => userSelectDirStore.userSelectDirs, val => {
+  userSelectDirs.value = val;
+});
 
 
 const addDir = async () => {
@@ -18,12 +20,25 @@ const addDir = async () => {
     title: "选择添加目录",
   });
   if (path) {
-
+    if (userSelectDirs.value.some((item) => item.path == path)) {
+      alert("该目录已存在");
+    } else {
+      userSelectDirStore.setUserSelectDirs([
+        ...userSelectDirs.value,
+        {
+          path: path,
+          checked: false,
+        },
+      ]);
+    }
   }
 };
 
 const confirm = (parent: any) => {
-
+  userSelectDirStore.setUserSelectDirs(userSelectDirs.value);
+  const dirs = userSelectDirs.value.filter((item) => item.checked);
+  playerStore.setScanDirs(dirs.map((item) => item.path));
+  parent?.close();
 };
 </script>
 
@@ -39,16 +54,17 @@ const confirm = (parent: any) => {
       <div class="form">
         <form>
           <div class="item">
-            <input type="checkbox" id="my-music" name="my-music" v-model="userSelected[0]" />
+            <input type="checkbox" id="my-music" name="my-music" v-model="userSelectDirs[0].checked" />
             <label for="my-music">我的音乐</label>
           </div>
           <div class="item">
-            <input type="checkbox" id="download" name="download" v-model="userSelected[1]" />
+            <input type="checkbox" id="download" name="download" v-model="userSelectDirs[1].checked" />
             <label for="download">下载</label>
           </div>
-          <div class="item" v-for="(item, index) in userSelectDirs" :key="index">
-            <input type="checkbox" :id="`usd-${index}`" :name="`usd-${index}`" v-model="userSelected[index + 2]" />
-            <label :for="`usd-${index}`">{{ item }}</label>
+          <div class="item" v-for="(item, index) in userSelectDirs.slice(2)" :key="index">
+            <input type="checkbox" :id="`${item.path}`" :name="`${item.path}`"
+              v-model="userSelectDirs[index + 2].checked" />
+            <label :for="`${item.path}`">{{ item.path }}</label>
           </div>
         </form>
       </div>
