@@ -59,10 +59,12 @@ const isSilence = computed(() => {
     return playerStore.playerVolumn == 0;
 });
 
+let playerVolumn = 100;
 const setSilense = async () => {
     if (isSilence.value) {
-        playerStore.setPlayerVolumn(100);
+        playerStore.setPlayerVolumn(playerVolumn);
     } else {
+        playerVolumn = playerStore.playerVolumn;
         playerStore.setPlayerVolumn(0);
     }
     invoke(Commands.player_set_volume, { volume: Number((playerStore.playerVolumn / 100).toFixed(2)) });
