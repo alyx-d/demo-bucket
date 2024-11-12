@@ -28,6 +28,7 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
         const percentage = calculatePercent(offsetY, trackEl.offsetHeight);
         process.value = percentage;
         volumn = Number((percentage / 100).toFixed(2));
+        invoke(Commands.player_set_volume, { volume: volumn });
     };
     trackEl.addEventListener("mousemove", onMouseMove);
     const onMouseUp = (_: MouseEvent) => {
