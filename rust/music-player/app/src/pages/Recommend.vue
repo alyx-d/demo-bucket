@@ -1,30 +1,27 @@
 <script setup lang="ts">
-import { message } from '@tauri-apps/plugin-dialog';
-import { usePlayBottomStore } from '../store/PlayBottomStore';
+const onToogleColorScheme = async (scheme: "dark" | "light" | "auto") => {
+    if (scheme === "auto") {
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.setAttribute("data-theme", "dark");
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+        document.documentElement.setAttribute("auto", "auto");
+    } else {
+        document.documentElement.setAttribute("data-theme", scheme);
+        document.documentElement.setAttribute("auto", "");
+    }
+};
 
-const store = usePlayBottomStore();
-
-const onButton1Click = () => {
-    store.hide();
-}
-
-const onButton2Click = () => {
-    store.show();
-}
-
-const onMessageClick = () => {
-    message("Hello World");
-}
 </script>
 
 <template>
     <div class="recommend">
         <span>Recommend</span>
-        <div>{{ store.playBottonShow }}</div>
         <div class="test">
-            <button type="button" @click="onButton1Click">hide</button>
-            <button type="button" @click="onButton2Click">show</button>
-            <button type="button" @click="onMessageClick">show</button>
+            <button type="button" @click="onToogleColorScheme('dark')">dark</button>
+            <button type="button" @click="onToogleColorScheme('light')">light</button>
+            <button type="button" @click="onToogleColorScheme('auto')">auto</button>
         </div>
     </div>
 </template>

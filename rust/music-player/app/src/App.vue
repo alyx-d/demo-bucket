@@ -15,6 +15,22 @@ listen(PlayerEvents.FileNoExists, async (event) => {
     playerStore.setPlayList(playerStore.playList);
   }
 });
+
+const getTheme = (): string => {
+  return document.documentElement.getAttribute("auto") || "";
+}
+
+const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+mediaQuery.addEventListener("change", (e) => {
+  console.log(e);
+  if (getTheme() === "auto") {
+    if (e.matches) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  }
+});
 </script>
 
 <template>
