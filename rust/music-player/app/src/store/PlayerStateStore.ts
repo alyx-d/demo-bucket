@@ -34,6 +34,10 @@ export const readPlayList = async (): Promise<OwnFileInfo[]> => {
 export const usePlayerStateStore = defineStore("player-state", () => {
     const isPlaying = ref(false);
     const isPause = ref(false);
+    /// 0-100
+    const playerVolumn = ref(
+        storeGet<number>(StorageKey.player_volumn) ?? 100,
+    );
     const playingIndex = ref<number>(
         storeGet<number>(StorageKey.playing_index) ?? -1,
     );
@@ -140,6 +144,11 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         totalDuration.value = duration;
     };
 
+    const setPlayerVolumn = (val: number) => {
+        playerVolumn.value = val;
+        storeSet(StorageKey.player_volumn, val);
+    };
+
     return {
         isPlaying,
         setPlaying,
@@ -156,5 +165,7 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         setPlayingPos,
         setTotalDuration,
         isPlayCompleted,
+        playerVolumn,
+        setPlayerVolumn,
     };
 });

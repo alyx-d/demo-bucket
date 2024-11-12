@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { usePlayerStateStore } from '../store/PlayerStateStore';
 import { invoke } from '@tauri-apps/api/core';
 import Commands from '../common/Commands';
+import { calculatePercent } from '../common/Utils';
 
 const playerStore = usePlayerStateStore();
 
@@ -11,10 +12,6 @@ let totalDuration = playerStore.totalDuration;
 watch(() => playerStore.totalDuration, val => {
     totalDuration = val;
 });
-
-const calculatePercent = (p: number, t: number) => {
-    return Math.min(Math.max((p / t) * 100, 0), 100);
-};
 
 const process = ref(totalDuration > 0 ? calculatePercent(pos, totalDuration) : 0);
 watch(() => playerStore.playingPos, val => {
@@ -32,19 +29,18 @@ const onTrackMouseDown = async (e: MouseEvent, el: HTMLElement) => {
     const offsetX = e.clientX - trackEl.getBoundingClientRect().left;
     const percentage = calculatePercent(offsetX, trackWidth);
     process.value = percentage;
-    const pos = Math.round(percentage * totalDuration / 100);
+    let pos = Math.round(percentage * totalDuration / 100);
     playerStore.setPlayingPos(pos);
-    invoke(Commands.player_seek, { pos });
     const onTrackMouseMove = (e: MouseEvent) => {
         const offsetX = e.clientX - trackEl.getBoundingClientRect().left;
         const percentage = calculatePercent(offsetX, trackWidth);
         process.value = percentage;
-        const pos = Math.round(percentage * totalDuration / 100);
-        playerStore.setPlayingPos(pos);
+        pos = Math.round(percentage * totalDuration / 100);
         ballEl.style.display = "block";
     };
     document.addEventListener("mousemove", onTrackMouseMove);
     const onMouseUp = (_: MouseEvent) => {
+        playerStore.setPlayingPos(pos);
         document.removeEventListener("mousemove", onTrackMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
         invoke(Commands.player_seek, { pos: playerStore.playingPos });

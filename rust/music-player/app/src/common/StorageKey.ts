@@ -10,6 +10,7 @@ enum StorageKey {
   playing_pos = "playing_pos",
   total_duration = "total_duration",
   user_select_dirs = "user_select_dirs",
+  player_volumn = "player_volumn",
 }
 
 export default StorageKey;

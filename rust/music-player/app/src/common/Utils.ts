@@ -43,3 +43,7 @@ export const secsToDuration = (secs: number): string => {
         sec.toString().padStart(2, "0")
     }`;
 };
+
+export const calculatePercent = (p: number, t: number) => {
+    return Math.min(Math.max((p / t) * 100, 0), 100);
+};
