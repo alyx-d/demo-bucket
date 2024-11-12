@@ -20,9 +20,7 @@ const getTheme = (): string => {
   return document.documentElement.getAttribute("auto") || "";
 }
 
-const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-mediaQuery.addEventListener("change", (e) => {
-  console.log(e);
+const setTheme = (e: MediaQueryListEvent | MediaQueryList) => {
   if (getTheme() === "auto") {
     if (e.matches) {
       document.documentElement.setAttribute("data-theme", "dark");
@@ -30,7 +28,11 @@ mediaQuery.addEventListener("change", (e) => {
       document.documentElement.setAttribute("data-theme", "light");
     }
   }
-});
+};
+
+const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+setTheme(mediaQuery);
+mediaQuery.addEventListener("change", setTheme);
 </script>
 
 <template>
