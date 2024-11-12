@@ -24,6 +24,7 @@ pub fn run() {
                         file_name: Some("logs".to_string()),
                     },
                 ))
+                .filter(|metadata| !metadata.target().contains("symphonia"))
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .build(),
         )
