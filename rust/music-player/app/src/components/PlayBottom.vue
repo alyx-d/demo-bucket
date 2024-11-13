@@ -8,7 +8,7 @@ import { invoke } from '@tauri-apps/api/core';
 import Commands from '../common/Commands';
 import { listen } from '@tauri-apps/api/event';
 import PlayerEvents from '../common/PlayerEvents';
-import VolumnAdjust from './VolumnAdjust.vue';
+import VolumnAdjust from './VolumeAdjust.vue';
 
 const store = usePlayBottomStore();
 const playerStore = usePlayerStateStore();
@@ -56,7 +56,7 @@ listen(PlayerEvents.Resume, (event) => {
 });
 
 const isSilence = computed(() => {
-    return playerStore.playerVolumn == 0;
+    return playerStore.playerVolume == 0;
 });
 
 let playerVolumn = 100;
@@ -64,10 +64,10 @@ const setSilense = async () => {
     if (isSilence.value) {
         playerStore.setPlayerVolumn(playerVolumn);
     } else {
-        playerVolumn = playerStore.playerVolumn;
+        playerVolumn = playerStore.playerVolume;
         playerStore.setPlayerVolumn(0);
     }
-    invoke(Commands.player_set_volume, { volume: Number((playerStore.playerVolumn / 100).toFixed(2)) });
+    invoke(Commands.player_set_volume, { volume: Number((playerStore.playerVolume / 100).toFixed(2)) });
 };
 </script>
 

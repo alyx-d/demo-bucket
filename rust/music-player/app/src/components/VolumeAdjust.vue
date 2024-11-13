@@ -7,9 +7,9 @@ import { calculatePercent } from '../common/Utils';
 
 const playerStore = usePlayerStateStore();
 
-const process = ref(playerStore.playerVolumn);
+const process = ref(playerStore.playerVolume);
 
-watch(() => playerStore.playerVolumn, val => process.value = val);
+watch(() => playerStore.playerVolume, val => process.value = val);
 
 const processVal = computed(() => {
     return process.value + "%";

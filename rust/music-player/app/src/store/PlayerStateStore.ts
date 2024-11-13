@@ -35,10 +35,10 @@ export const usePlayerStateStore = defineStore("player-state", () => {
     const isPlaying = ref(false);
     const isPause = ref(false);
     /// 0-100
-    const playerVolumn = ref(
+    const playerVolume = ref(
         storeGet<number>(StorageKey.player_volumn) ?? 100,
     );
-    invoke(Commands.player_set_volume, { volumn: (playerVolumn.value / 100).toFixed(2) });
+    invoke(Commands.player_set_volume, { volume: Number((playerVolume.value / 100).toFixed(2)) });
     const playingIndex = ref<number>(
         storeGet<number>(StorageKey.playing_index) ?? -1,
     );
@@ -146,7 +146,7 @@ export const usePlayerStateStore = defineStore("player-state", () => {
     };
 
     const setPlayerVolumn = (val: number) => {
-        playerVolumn.value = val;
+        playerVolume.value = val;
         storeSet(StorageKey.player_volumn, val);
     };
 
@@ -166,7 +166,7 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         setPlayingPos,
         setTotalDuration,
         isPlayCompleted,
-        playerVolumn,
+        playerVolume,
         setPlayerVolumn,
     };
 });
