@@ -38,6 +38,7 @@ export const usePlayerStateStore = defineStore("player-state", () => {
     const playerVolumn = ref(
         storeGet<number>(StorageKey.player_volumn) ?? 100,
     );
+    invoke(Commands.player_set_volume, { volumn: playerVolumn.value });
     const playingIndex = ref<number>(
         storeGet<number>(StorageKey.playing_index) ?? -1,
     );
