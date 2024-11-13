@@ -19,7 +19,6 @@
 .content {
   padding: 50px 30px 30px 30px;
   height: 100%;
-  min-width: 768px;
 }
 
 .fade-enter-active {
