@@ -170,6 +170,7 @@ const confirm = (parent: any) => {
       }
 
       &.confirm {
+        color: var(--select-dir-confirm-button-text-color);
         background-color: var(--main-color);
 
         &:hover {
@@ -178,6 +179,8 @@ const confirm = (parent: any) => {
       }
 
       &.add-dir {
+        color: var(--select-dir-button-text-color);
+
         &:hover {
           background-color: var(--btn-hover-bg-color);
           border-color: #ddd;

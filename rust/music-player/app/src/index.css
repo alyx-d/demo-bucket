@@ -21,6 +21,8 @@
     --volume-adjust-bg-color: #fff;
     --volume-adjust-track-bg-color: #e9eaec;
     color: black;
+    --select-dir-button-text-color: #000;
+    --select-dir-confirm-button-text-color: #fff;
 }
 
 [data-theme="dark"]:root {
@@ -42,6 +44,8 @@
     --volume-adjust-bg-color: #313136;
     --volume-adjust-track-bg-color: #494951;
     color: white;
+    --select-dir-button-text-color: #fff;
+    --select-dir-confirm-button-text-color: #fff;
 }
 
 ::-webkit-scrollbar {
