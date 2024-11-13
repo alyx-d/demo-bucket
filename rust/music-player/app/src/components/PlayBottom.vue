@@ -62,10 +62,10 @@ const isSilence = computed(() => {
 let playerVolumn = 100;
 const setSilense = async () => {
     if (isSilence.value) {
-        playerStore.setPlayerVolumn(playerVolumn);
+        playerStore.setPlayerVolume(playerVolumn);
     } else {
         playerVolumn = playerStore.playerVolume;
-        playerStore.setPlayerVolumn(0);
+        playerStore.setPlayerVolume(0);
     }
     invoke(Commands.player_set_volume, { volume: Number((playerStore.playerVolume / 100).toFixed(2)) });
 };
@@ -106,7 +106,7 @@ const setSilense = async () => {
                 </div>
             </div>
             <div class="button-group">
-                <div class="volumn">
+                <div class="volume">
                     <svg @click="setSilense" v-if="!isSilence" t="1731332608984" class="icon" viewBox="0 0 1024 1024"
                         version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4259" data-darkreader-inline-fill=""
                         width="200" height="200">
@@ -258,7 +258,7 @@ const setSilense = async () => {
         justify-content: flex-end;
         align-items: center;
 
-        .volumn {
+        .volume {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -278,12 +278,12 @@ const setSilense = async () => {
                 }
             }
 
-            &:hover .volumn-adjust {
+            &:hover .volume-adjust {
                 transform: scaleY(1);
                 transition: 0.1s;
             }
 
-            .volumn-adjust {
+            .volume-adjust {
                 position: absolute;
                 bottom: 100%;
                 transform: scaleY(0) translateY(80%);

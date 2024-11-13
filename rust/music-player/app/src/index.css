@@ -16,10 +16,10 @@
     --scroll-bar-thumb-hover-bg-color: #c4c7cf;
     --icon-path-fill-color: #4a4e5b;
     --icon-path-hover-fill-color: #24262b;
-    --volumn-adjust-border-color: #ccc;
+    --volume-adjust-border-color: #ccc;
     --bottom-bar-border-color: #eeeeee;
-    --volumn-adjust-bg-color: #fff;
-    --volumn-adjust-track-bg-color: #e9eaec;
+    --volume-adjust-bg-color: #fff;
+    --volume-adjust-track-bg-color: #e9eaec;
     color: black;
 }
 
@@ -39,8 +39,8 @@
     --scroll-bar-thumb-hover-bg-color: #4e4e53;
     --icon-path-fill-color: #ccc;
     --icon-path-hover-fill-color: #fff;
-    --volumn-adjust-bg-color: #313136;
-    --volumn-adjust-track-bg-color: #494951;
+    --volume-adjust-bg-color: #313136;
+    --volume-adjust-track-bg-color: #494951;
     color: white;
 }
 

@@ -145,7 +145,7 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         totalDuration.value = duration;
     };
 
-    const setPlayerVolumn = (val: number) => {
+    const setPlayerVolume = (val: number) => {
         playerVolume.value = val;
         storeSet(StorageKey.player_volumn, val);
     };
@@ -167,6 +167,6 @@ export const usePlayerStateStore = defineStore("player-state", () => {
         setTotalDuration,
         isPlayCompleted,
         playerVolume,
-        setPlayerVolumn,
+        setPlayerVolume,
     };
 });

@@ -21,22 +21,22 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
     const offsetY = trackEl.getBoundingClientRect().bottom - e.clientY;
     const percentage = calculatePercent(offsetY, trackEl.offsetHeight);
     process.value = percentage;
-    let volumn = Number((percentage / 100).toFixed(2));
-    playerStore.setPlayerVolumn(process.value);
+    let volume = Number((percentage / 100).toFixed(2));
+    playerStore.setPlayerVolume(process.value);
     const onMouseMove = (e: MouseEvent) => {
         const offsetY = trackEl.getBoundingClientRect().bottom - e.clientY;
         const percentage = calculatePercent(offsetY, trackEl.offsetHeight);
         process.value = percentage;
-        volumn = Number((percentage / 100).toFixed(2));
-        invoke(Commands.player_set_volume, { volume: volumn });
+        volume = Number((percentage / 100).toFixed(2));
+        invoke(Commands.player_set_volume, { volume: volume });
     };
     trackEl.addEventListener("mousemove", onMouseMove);
     const onMouseUp = (_: MouseEvent) => {
         trackEl.removeEventListener("mousemove", onMouseMove);
         trackEl.removeEventListener("mouseup", onMouseUp);
         trackEl.removeEventListener("mouseout", onMouseUp);
-        playerStore.setPlayerVolumn(process.value);
-        invoke(Commands.player_set_volume, { volume: volumn });
+        playerStore.setPlayerVolume(process.value);
+        invoke(Commands.player_set_volume, { volume: volume });
     };
     trackEl.addEventListener("mouseup", onMouseUp);
     trackEl.addEventListener("mouseout", onMouseUp);
@@ -44,7 +44,7 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
 </script>
 
 <template>
-    <div class="volumn-adjust">
+    <div class="volume-adjust">
         <div class="wrapper">
             <div class="slider" @mousedown="onProcessMouseDown($event, $el)">
                 <div class="track">
@@ -61,7 +61,7 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
 </template>
 
 <style scoped lang="css">
-.volumn-adjust {
+.volume-adjust {
     --process: v-bind(processVal);
 
     width: 40px;
@@ -74,7 +74,7 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
     .wrapper {
         width: 100%;
         height: 100%;
-        background-color: var(--volumn-adjust-bg-color);
+        background-color: var(--volume-adjust-bg-color);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -92,7 +92,7 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
             .track {
                 width: 7px;
                 height: 100%;
-                background-color: var(--volumn-adjust-track-bg-color);
+                background-color: var(--volume-adjust-track-bg-color);
                 border-radius: 5px;
                 position: relative;
                 display: flex;
@@ -128,10 +128,10 @@ const onProcessMouseDown = async (e: MouseEvent, el: HTMLElement) => {
     .triangle {
         width: 15px;
         height: 15px;
-        background-color: var(--volumn-adjust-bg-color);
+        background-color: var(--volume-adjust-bg-color);
         clip-path: polygon(50% 50%, 0 0, 100% 0);
         border-radius: 0 0 20px 20px;
-        box-shadow: 5px 5px 5px var(--volumn-adjust-bg-color);
+        box-shadow: 5px 5px 5px var(--volume-adjust-bg-color);
     }
 }
 </style>
