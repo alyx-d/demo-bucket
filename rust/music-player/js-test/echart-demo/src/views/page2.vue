@@ -2,50 +2,35 @@
 import { onMounted, ref } from 'vue';
 import * as echarts from 'echarts';
 
-const echartsContainer = ref<any>();
+const echartsContainer = ref<HTMLElement>();
 
 onMounted(() => {
     // console.log('echartsContainer', echartsContainer.value);
     // return;
-    const instance = echarts.init(echartsContainer.value);
+    const instance = echarts.init(echartsContainer.value, "dark");
     const option = {
-        title: {
-            text: '某站点用户访问来源',
-            subtext: '纯属虚构',
-            x: 'center'
+        legend: {},
+        tooltip: {},
+        dataset: {
+            source: [
+                ['product', '2015', '2016', '2017'],
+                ['Matcha Latte', 43.3, 85.8, 93.7],
+                ['Milk Tea', 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ],
         },
-        tooltip: {
-            trigger: 'item',
-            formatter: "{a} <br/>{b} : {c} ({d}%)"
+        xAxis: {
+            type: 'category',
         },
-        legend: {
-            orient: 'vertical',
-            left: 'left',
-            data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
-        },
+        yAxis: {},
         series: [
-            {
-                name: '访问来源',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                data: [
-                    { value: 335, name: '直接访问' },
-                    { value: 310, name: '邮件营销' },
-                    { value: 234, name: '联盟广告' },
-                    { value: 135, name: '视频广告' },
-                    { value: 1548, name: '搜索引擎' }
-                ],
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
-                }
-            }
-        ]
+            { type: "bar" },
+            { type: "bar" },
+            { type: "bar" },
+        ],
     };
+    // setOption can use in async request to update data
     instance.setOption(option);
 });
 </script>
